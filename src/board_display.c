@@ -2,9 +2,11 @@
 #include "board.h"
 #include "misc.h"
 
+// TODO: the non-board bits on the edge of the screen look weird as they are
+// the same color as the dark squares.
 gboolean board_draw_callback(GtkWidget *widget, cairo_t *cr, gpointer data)
 {
-	IGNORE(data);
+	Board *board = (Board *)data;
 
 	// Color dark squares by setting the background
 	cairo_set_source_rgb(cr, 0.450980, 0.537255, 0.713725);
@@ -20,18 +22,32 @@ gboolean board_draw_callback(GtkWidget *widget, cairo_t *cr, gpointer data)
 		max_square_height;
 
 	// Color light squares one-by-one
-	cairo_set_source_rgb(cr, 0.952941, 0.952941, 0.952941);
 	cairo_set_line_width(cr, 0);
 
-	for (uint rank = 0; rank < BOARD_SIZE; rank++) {
-		for (uint file = 0; file < BOARD_SIZE; file++) {
-			if ((rank + file) % 2 != 0)
-				continue;
-			
-			cairo_rectangle(cr, file * square_size, rank * square_size,
-					square_size, square_size);
+	for (uint file = 0; file < BOARD_SIZE; file++) {
+		for (uint rank = 0; rank < BOARD_SIZE; rank++) {
+			uint left = file * square_size;
+			uint top = rank * square_size;
 
-			cairo_fill(cr);
+			if ((rank + file) % 2 == 0) { // only draw the light squares
+				// Fill in the square
+				cairo_set_source_rgb(cr, 0.952941, 0.952941, 0.952941);
+				cairo_rectangle(cr, left, top, square_size, square_size);
+				cairo_fill(cr);
+			}
+
+			// Draw the piece (if any)
+			Piece p;
+			if ((p = PIECE_AT(board, file, rank)) != EMPTY) {
+				char c = char_from_piece(p);
+				char str[2];
+				str[0] = c;
+				str[1] = '\0';
+
+				cairo_move_to(cr, left + square_size / 2, top + square_size / 2);
+				cairo_set_source_rgb(cr, 0, 0, 0);
+				cairo_show_text(cr, str);
+			}
 		}
 	}
 

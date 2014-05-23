@@ -44,9 +44,9 @@ typedef enum Piece_type
 	KING,
 } Piece_type;
 
-#define PLAYER(x) ((Player)((x) >> (sizeof(Piece) - 1)))
-#define PIECE_TYPE(x) ((Piece_type)((x) & ~(1 << ((sizeof Piece) - 1))))
-#define PIECE(p, t) ((Piece)(((t) << sizeof(Piece)) | (p)))
+#define PLAYER(x) ((Player)((x) >> (sizeof(Piece) * 8 - 1)))
+#define PIECE_TYPE(x) ((Piece_type)((x) & ~(1 << (sizeof(Piece) * 8 - 1))))
+#define PIECE(p, t) ((Piece)(((p) << (sizeof(Piece) * 8 - 1)) | (t)))
 #define NULL_PIECE ((unsigned short)-1)
 
 
@@ -86,9 +86,14 @@ typedef struct Board
 	Piece pieces[BOARD_SIZE * BOARD_SIZE];
 } Board;
 
-#define PIECE_AT(b, file, rank) ((b)->pieces[(rank) * BOARD_SIZE + (file)])
+#define PIECE_AT(b, file, rank) ((b)->pieces[((rank) * BOARD_SIZE) + (file)])
 
 Piece piece_from_char(char c);
+char char_from_piece(Piece p);
 bool from_fen(Board *board, const char *fen_str);
+void print_board(Board *b);
+
+
+extern char *start_board_fen;
 
 #endif // include guard

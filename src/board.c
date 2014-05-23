@@ -7,7 +7,7 @@
 // Converts a character into a piece, using the standard used in PGN and FEN.
 Piece piece_from_char(char c)
 {
-	Player player = (Player)isupper(c);
+	Player player = isupper(c) ? WHITE : BLACK;
 	switch (tolower(c)) {
 	case 'p': return PIECE(player, PAWN);
 	case 'n': return PIECE(player, KNIGHT);
@@ -15,9 +15,26 @@ Piece piece_from_char(char c)
 	case 'r': return PIECE(player, ROOK);
 	case 'q': return PIECE(player, QUEEN);
 	case 'k': return PIECE(player, KING);
-	default: return NULL_PIECE;
+	default: return EMPTY;
 	}
 }
+
+// Converts a piece into a char, using the standard used in PGN and FEN
+char char_from_piece(Piece p)
+{
+	switch (PIECE_TYPE(p)) {
+	case PAWN:   return 'P';
+	case KNIGHT: return 'N';
+	case BISHOP: return 'B';
+	case ROOK:   return 'R';
+	case QUEEN:  return 'Q';
+	case KING:   return 'K';
+	default:     return ' ';
+	}
+}
+
+char *start_board_fen =
+	"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 // Initializes a Board given a string containing Forsyth-Edwards Notation (FEN)
 // See <http://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation> for a
@@ -27,10 +44,10 @@ bool from_fen(Board *board, const char *fen_str)
 {
 	uint i = 0;
 
-	for (uint rank = 0; rank < BOARD_SIZE; rank++) {
+	for (int rank = 7; rank >= 0; rank--) {
 		char c;
 		uint file = 0;
-		while ((c = fen_str[i++]) != '/') {
+		while ((c = fen_str[i++]) != '/' && c != ' ') {
 			if (isdigit(c)) {
 				if (c == '0') // "Skip zero files" makes no sense
 					return false;
@@ -39,17 +56,14 @@ bool from_fen(Board *board, const char *fen_str)
 					PIECE_AT(board, file + n, rank) = EMPTY;
 
 				file += c - '0';
+				continue;
 			} else {
 				PIECE_AT(board, file, rank) = piece_from_char(c);
 			}
 
 			file++;
 		}
-
 	}
-
-	if (fen_str[i++] != ' ')
-		return false;
 
 	char player = fen_str[i++];
 	if (player == 'w')
@@ -78,9 +92,6 @@ bool from_fen(Board *board, const char *fen_str)
 
 	board->castling[BLACK] = b_castling;
 	board->castling[WHITE] = w_castling;
-
-	if (fen_str[i++] != ' ')
-		return false;
 
 	char file_char = fen_str[i++];
 	if (file_char == '-') {
@@ -116,4 +127,20 @@ bool from_fen(Board *board, const char *fen_str)
 
 	// TODO: check there's no trailing shit after a valid FEN string?
 	return true;
+}
+
+// For debugging
+void print_board(Board *b)
+{
+	puts("..........");
+	for (uint rank = 0; rank < BOARD_SIZE; rank++) {
+		putchar('.');
+		for (uint file = 0; file < BOARD_SIZE; file++) {
+			putchar(char_from_piece(PIECE_AT(b, file, rank)));
+		}
+
+		puts(".");
+	}
+	puts("..........");
+	printf("%s to move\n", b->turn == WHITE ? "White" : "Black");
 }
