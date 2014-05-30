@@ -18,7 +18,7 @@ bool legal_move(Board *board, Move move)
 	Piece p = PIECE_AT_SQUARE(board, start);
 	Piece at_end_square = PIECE_AT_SQUARE(board, end);
 
-	if (p == EMPTY || PLAYER(at_end_square) == PLAYER(p))
+	if (p == EMPTY || (at_end_square != EMPTY && PLAYER(at_end_square) == PLAYER(p)))
 		return false;
 	
 	if (dx == 0 && dy == 0)
