@@ -33,6 +33,9 @@ typedef enum Player
 	WHITE = 1,
 } Player;
 
+#define PIECE_TYPES 6
+
+// The order of these matters
 typedef enum Piece_type
 {
 	EMPTY,

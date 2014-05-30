@@ -1,6 +1,30 @@
 #include <gtk/gtk.h>
+#include <librsvg/rsvg.h>
+#include <librsvg/rsvg-cairo.h>
+#include <stdio.h>
+#include <string.h>
 #include "board.h"
 #include "misc.h"
+
+RsvgHandle *piece_images[2][6];
+
+void load_svgs(char *dir, GError **err)
+{
+	uint len = strlen(dir) + 6; // piece letter + ".svg\0"
+	char str[len];
+	char *piece_letters[] = { "pnbrqk", "PNBRQK" };
+
+	for (uint i = 0; i < 2; i++) {
+		for (uint j = 0; piece_letters[i][j] != '\0'; j++) {
+			sprintf(str, "%s%c.svg", dir, piece_letters[i][j]);
+			printf("Loading '%s'\n", str);
+
+			piece_images[i][j] = rsvg_handle_new_from_file(str, err);
+			if (*err != NULL)
+				return;
+		}
+	}
+}
 
 // TODO: the non-board bits on the edge of the screen look weird as they are
 // the same color as the dark squares.
@@ -26,29 +50,31 @@ gboolean board_draw_callback(GtkWidget *widget, cairo_t *cr, gpointer data)
 
 	for (uint file = 0; file < BOARD_SIZE; file++) {
 		for (uint rank = 0; rank < BOARD_SIZE; rank++) {
-			uint left = file * square_size;
-			uint top = rank * square_size;
-
 			if ((rank + file) % 2 == 0) { // only draw the light squares
 				// Fill in the square
 				cairo_set_source_rgb(cr, 0.952941, 0.952941, 0.952941);
-				cairo_rectangle(cr, left, top, square_size, square_size);
+				cairo_rectangle(cr, 0, 0, square_size, square_size);
 				cairo_fill(cr);
 			}
 
 			// Draw the piece (if any)
 			Piece p;
 			if ((p = PIECE_AT(board, file, rank)) != EMPTY) {
-				char c = char_from_piece(p);
-				char str[2];
-				str[0] = c;
-				str[1] = '\0';
+				RsvgHandle *piece_image =
+					piece_images[PLAYER(p)][PIECE_TYPE(p) - 1];
 
-				cairo_move_to(cr, left + square_size / 2, top + square_size / 2);
+				cairo_scale(cr, 0.025, 0.025);
+
 				cairo_set_source_rgb(cr, 0, 0, 0);
-				cairo_show_text(cr, str);
+				rsvg_handle_render_cairo(piece_image, cr);
+
+				cairo_scale(cr, 40, 40);
 			}
+
+			cairo_translate(cr, 0, square_size);
 		}
+
+		cairo_translate(cr, square_size, -square_size * BOARD_SIZE);
 	}
 
 	return FALSE;

@@ -3,9 +3,18 @@
 #include "board.h"
 #include "board_display.h"
 
+char *piece_svgs = "pieces/merida/";
+
 int main(int argc, char *argv[])
 {
 	gtk_init(&argc, &argv);
+
+	GError *err = NULL;
+	load_svgs(piece_svgs, &err);
+	if (err != NULL) {
+		printf("Error loading SVGs:\n%s\n", err->message);
+		return 1;
+	}
 
 	char *fen;
 	if (argc > 1) {
