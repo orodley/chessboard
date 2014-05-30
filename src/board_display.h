@@ -12,5 +12,7 @@ gboolean board_mouse_down_callback(GtkWidget *widget, GdkEvent *event,
 		gpointer user_data);
 gboolean board_mouse_up_callback(GtkWidget *widget, GdkEvent *event,
 		gpointer user_data);
+gboolean board_mouse_move_callback(GtkWidget *widget, GdkEvent *event,
+		gpointer user_data);
 
 #endif

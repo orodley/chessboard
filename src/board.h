@@ -21,7 +21,7 @@ typedef uint_least16_t Square;
 #define SQUARE_RANK(s) ((s) & 0xF)
 #define SQUARE(file, rank) (((file) << 8) | (rank))
 
-#define NULL_SQUARE (~((Square)0))
+#define NULL_SQUARE ((Square)(~((Square)0)))
 
 // Pieces are represented as shorts, with the MSB used to store the color, and
 // the rest equal to one of a bunch of constants for the type of piece.
