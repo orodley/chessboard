@@ -105,7 +105,7 @@ gboolean board_draw_callback(GtkWidget *widget, cairo_t *cr, gpointer data)
 
 	cairo_identity_matrix(cr);
 	cairo_translate(cr, mouse_x - square_size / 2, mouse_y - square_size / 2);
-	draw_piece(cr, PIECE_AT(board, SQUARE_FILE(drag_source), SQUARE_RANK(drag_source)), square_size);
+	draw_piece(cr, PIECE_AT_SQUARE(board, drag_source), square_size);
 
 	return FALSE;
 }
@@ -129,8 +129,7 @@ gboolean board_mouse_down_callback(GtkWidget *widget, GdkEvent *event,
 		return FALSE;
 
 	Square clicked_square = board_coords_to_square(widget, e->x, e->y);
-	if (PIECE_AT(board, SQUARE_FILE(clicked_square),
-				SQUARE_RANK(clicked_square)) != EMPTY) {
+	if (PIECE_AT_SQUARE(board, clicked_square) != EMPTY) {
 		drag_source = clicked_square;
 	}
 

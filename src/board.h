@@ -90,6 +90,7 @@ typedef struct Board
 } Board;
 
 #define PIECE_AT(b, file, rank) ((b)->pieces[((rank) * BOARD_SIZE) + (file)])
+#define PIECE_AT_SQUARE(b, square) PIECE_AT(b, SQUARE_FILE(square), SQUARE_RANK(square))
 
 Piece piece_from_char(char c);
 char char_from_piece(Piece p);
