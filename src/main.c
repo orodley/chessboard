@@ -44,8 +44,14 @@ int main(int argc, char *argv[])
 	gint width, height;
 	gtk_window_get_size(GTK_WINDOW(window), &width, &height);
 	gtk_widget_set_size_request(drawing_area, width, height);
+	gtk_widget_add_events(drawing_area,
+			GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK);
 	g_signal_connect(G_OBJECT(drawing_area), "draw",
 			G_CALLBACK(board_draw_callback), &board);
+	g_signal_connect(G_OBJECT(drawing_area), "button-press-event",
+			G_CALLBACK(board_mouse_down_callback), NULL);
+	g_signal_connect(G_OBJECT(drawing_area), "button-release-event",
+			G_CALLBACK(board_mouse_up_callback), NULL);
 
 	gtk_container_add(GTK_CONTAINER(window), drawing_area);
 	gtk_widget_show_all(window);

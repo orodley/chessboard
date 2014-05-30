@@ -90,3 +90,27 @@ gboolean board_draw_callback(GtkWidget *widget, cairo_t *cr, gpointer data)
 
 	return FALSE;
 }
+
+gboolean board_mouse_down_callback(GtkWidget *widget, GdkEvent *event,
+		gpointer user_data)
+{
+	IGNORE(widget);
+	IGNORE(user_data);
+
+	GdkEventButton *e = (GdkEventButton *)event;
+	printf("v[%u]\n", e->button);	
+
+	return FALSE;
+}
+
+gboolean board_mouse_up_callback(GtkWidget *widget, GdkEvent *event,
+		gpointer user_data)
+{
+	IGNORE(widget);
+	IGNORE(user_data);
+
+	GdkEventButton *e = (GdkEventButton *)event;
+	printf("^[%u]\n", e->button);	
+
+	return FALSE;
+}
