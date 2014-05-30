@@ -16,8 +16,9 @@ bool legal_move(Board *board, Move move)
 	int dx = SQUARE_FILE(end) - SQUARE_FILE(start);
 	int dy = SQUARE_RANK(end) - SQUARE_RANK(start);
 	Piece p = PIECE_AT_SQUARE(board, start);
+	Piece at_end_square = PIECE_AT_SQUARE(board, end);
 
-	if (p == EMPTY || PLAYER(PIECE_AT_SQUARE(board, end)) == PLAYER(p))
+	if (p == EMPTY || PLAYER(at_end_square) == PLAYER(p))
 		return false;
 	
 	if (dx == 0 && dy == 0)
@@ -43,7 +44,17 @@ bool legal_move(Board *board, Move move)
 
 	switch (PIECE_TYPE(p)) {
 	case KNIGHT: return (ax == 1 && ay == 2) || (ax == 2 && ay == 1);
-	case PAWN: return dx == 0 && dy == (PLAYER(p) == WHITE ? 1 : -1);
+	case PAWN:
+		if (dy != (PLAYER(p) == WHITE ? 1 : -1))
+			return false;
+
+		if (dx == 0)
+			return true;
+
+		if (dx == 1 || dx == -1)
+			return at_end_square != EMPTY && PLAYER(at_end_square) != PLAYER(p);
+
+		return false;
 	case BISHOP: return ax == ay;
 	case ROOK: return dx == 0 || dy == 0;
 	case QUEEN: return ax == ay || dx == 0 || dy == 0;
