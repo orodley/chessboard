@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "board.h"
+#include "board_display.h"
 #include "misc.h"
 
 RsvgHandle *piece_images[2][6];
@@ -63,12 +64,17 @@ gboolean board_draw_callback(GtkWidget *widget, cairo_t *cr, gpointer data)
 				RsvgHandle *piece_image =
 					piece_images[PLAYER(p)][PIECE_TYPE(p) - 1];
 
-				cairo_scale(cr, 0.025, 0.025);
+				// 0.025 is a bit of a magic number. It's basically just
+				// the amount by which the pieces must be scaled in order to
+				// fit correctly with the default square size. We then scale
+				// that based on how big the squares actually are.
+				double scale = 0.025 * square_size / DEFAULT_SQUARE_SIZE;
+				cairo_scale(cr, scale, scale);
 
 				cairo_set_source_rgb(cr, 0, 0, 0);
 				rsvg_handle_render_cairo(piece_image, cr);
 
-				cairo_scale(cr, 40, 40);
+				cairo_scale(cr, 1 / scale, 1 / scale);
 			}
 
 			cairo_translate(cr, 0, square_size);
