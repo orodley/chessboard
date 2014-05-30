@@ -13,13 +13,14 @@
 // bytes. Each pair of bytes has the file in the most significant byte, and
 // the rank in the least significant byte.
 typedef uint_least32_t Move;
-#define START_SQUARE(m) ((m) >> 16)
-#define END_SQUARE(m)   ((m) & 0xFF)
+#define MOVE(start, end) ((Move)(((start) << 16) | (end)))
+#define START_SQUARE(m)  ((m) >> 16)
+#define END_SQUARE(m)    ((m) & 0xFFFF)
 
 typedef uint_least16_t Square;
+#define SQUARE(file, rank) (((file) << 8) | (rank))
 #define SQUARE_FILE(s) ((s) >> 8)
 #define SQUARE_RANK(s) ((s) & 0xF)
-#define SQUARE(file, rank) (((file) << 8) | (rank))
 
 #define NULL_SQUARE ((Square)(~((Square)0)))
 

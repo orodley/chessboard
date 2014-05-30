@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 	g_signal_connect(G_OBJECT(drawing_area), "button-press-event",
 			G_CALLBACK(board_mouse_down_callback), &board);
 	g_signal_connect(G_OBJECT(drawing_area), "button-release-event",
-			G_CALLBACK(board_mouse_up_callback), NULL);
+			G_CALLBACK(board_mouse_up_callback), &board);
 	g_signal_connect(G_OBJECT(drawing_area), "motion-notify-event",
 			G_CALLBACK(board_mouse_move_callback), NULL);
 

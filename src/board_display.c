@@ -6,6 +6,7 @@
 #include "board.h"
 #include "board_display.h"
 #include "misc.h"
+#include "moves.h"
 
 RsvgHandle *piece_images[2][6];
 
@@ -18,7 +19,6 @@ void load_svgs(char *dir, GError **err)
 	for (uint i = 0; i < 2; i++) {
 		for (uint j = 0; piece_letters[i][j] != '\0'; j++) {
 			sprintf(str, "%s%c.svg", dir, piece_letters[i][j]);
-			printf("Loading '%s'\n", str);
 
 			piece_images[i][j] = rsvg_handle_new_from_file(str, err);
 			if (*err != NULL)
@@ -56,6 +56,7 @@ void draw_piece(cairo_t *cr, Piece p, uint size)
 	cairo_scale(cr, scale, scale);
 
 	cairo_set_source_rgb(cr, 0, 0, 0);
+
 	rsvg_handle_render_cairo(piece_image, cr);
 
 	cairo_scale(cr, 1 / scale, 1 / scale);
@@ -103,9 +104,11 @@ gboolean board_draw_callback(GtkWidget *widget, cairo_t *cr, gpointer data)
 		cairo_translate(cr, square_size, -square_size * BOARD_SIZE);
 	}
 
-	cairo_identity_matrix(cr);
-	cairo_translate(cr, mouse_x - square_size / 2, mouse_y - square_size / 2);
-	draw_piece(cr, PIECE_AT_SQUARE(board, drag_source), square_size);
+	if (drag_source != NULL_SQUARE) {
+		cairo_identity_matrix(cr);
+		cairo_translate(cr, mouse_x - square_size / 2, mouse_y - square_size / 2);
+		draw_piece(cr, PIECE_AT_SQUARE(board, drag_source), square_size);
+	}
 
 	return FALSE;
 }
@@ -139,11 +142,20 @@ gboolean board_mouse_down_callback(GtkWidget *widget, GdkEvent *event,
 gboolean board_mouse_up_callback(GtkWidget *widget, GdkEvent *event,
 		gpointer user_data)
 {
-	IGNORE(user_data);
 	GdkEventButton *e = (GdkEventButton *)event;
+	Board *board = (Board *)user_data;
 
-	if (e->button != 1)
+	if (e->button != 1 || drag_source == NULL_SQUARE)
 		return FALSE;
+
+	Square drag_target = board_coords_to_square(widget, e->x, e->y);
+	Move m = MOVE(drag_source, drag_target);
+
+	if (legal_move(board, m)) {
+		PIECE_AT_SQUARE(board, END_SQUARE(m)) =
+			PIECE_AT_SQUARE(board, START_SQUARE(m));
+		PIECE_AT_SQUARE(board, START_SQUARE(m)) = EMPTY;
+	}
 
 	drag_source = NULL_SQUARE;
 	gtk_widget_queue_draw(widget);
