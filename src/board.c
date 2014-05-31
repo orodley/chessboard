@@ -134,7 +134,7 @@ bool from_fen(Board *board, const char *fen_str)
 void print_board(Board *b)
 {
 	puts("..........");
-	for (uint rank = 0; rank < BOARD_SIZE; rank++) {
+	for (int rank = 7; rank >= 0; rank--) {
 		putchar('.');
 		for (uint file = 0; file < BOARD_SIZE; file++) {
 			putchar(char_from_piece(PIECE_AT(b, file, rank)));
