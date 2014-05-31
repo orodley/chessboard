@@ -221,3 +221,29 @@ done:
 	assert(king_location != NULL_SQUARE); // both players should have a king
 	return under_attack(board, king_location, p == WHITE ? BLACK : WHITE);
 }
+
+bool can_castle_kingside(Board *board, Player p)
+{
+	uint rank = p == WHITE ? 0 : 7;
+	Player other = p == WHITE ? BLACK : WHITE;
+
+	return board->castling[p].kingside && !in_check(board, p) &&
+		PIECE_AT(board, 5, rank) == EMPTY &&
+		PIECE_AT(board, 6, rank) == EMPTY &&
+		!under_attack(board, SQUARE(5, rank), other) &&
+		!under_attack(board, SQUARE(6, rank), other);
+}
+
+bool can_castle_queenside(Board *board, Player p)
+{
+	uint rank = p == WHITE ? 0 : 7;
+	Player other = p == WHITE ? BLACK : WHITE;
+
+	return board->castling[p].kingside && !in_check(board, p) &&
+		PIECE_AT(board, 3, rank) == EMPTY &&
+		PIECE_AT(board, 2, rank) == EMPTY &&
+		PIECE_AT(board, 1, rank) == EMPTY &&
+		!under_attack(board, SQUARE(3, rank), other) &&
+		!under_attack(board, SQUARE(2, rank), other) &&
+		!under_attack(board, SQUARE(1, rank), other);
+}

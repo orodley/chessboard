@@ -28,6 +28,33 @@ void perform_move(Board *board, Move move)
 		board->en_passant = NULL_SQUARE;
 	}
 
+	// Check if we're castling so we can move the rook too
+	uint dx = SQUARE_FILE(end) - SQUARE_FILE(start);
+	if (PIECE_TYPE(p) == KING && abs(dx) > 1) {
+		uint rank = PLAYER(p) == WHITE ? 0 : 7;
+		bool kingside = SQUARE_FILE(end) == 6;
+		if (kingside) {
+			PIECE_AT(board, 7, rank) = EMPTY;
+			PIECE_AT(board, 5, rank) = PIECE(PLAYER(p), ROOK);
+		} else {
+			PIECE_AT(board, 0, rank) = EMPTY;
+			PIECE_AT(board, 3, rank) = PIECE(PLAYER(p), ROOK);
+		}
+	}
+
+	// Check if we're depriving ourself of castling rights
+	Castling *c = &board->castling[PLAYER(p)];
+	if (PIECE_TYPE(p) == KING) {
+		c->kingside = false;
+		c->queenside = false;
+	} else if (PIECE_TYPE(p) == ROOK) {
+		if (SQUARE_FILE(start) == 7) {
+			c->kingside = false;
+		} else if (SQUARE_FILE(start) == 0) {
+			c->queenside = false;
+		}
+	}
+
 	// Update the turn tracker
 	board->turn = 1 - board->turn; // (0, 1) = (BLACK, WHITE) & 0 -> 1, 1 -> 0
 
@@ -35,8 +62,6 @@ void perform_move(Board *board, Move move)
 	PIECE_AT_SQUARE(board, start) = EMPTY;
 }
 
-// TODO
-// * Castling
 bool legal_move(Board *board, Move move, bool check_for_check)
 {
 	Square start = START_SQUARE(move);
@@ -121,7 +146,27 @@ bool legal_move(Board *board, Move move, bool check_for_check)
 	case BISHOP: legal_movement = ax == ay; break;
 	case ROOK:   legal_movement = dx == 0 || dy == 0; break;
 	case QUEEN:  legal_movement = ax == ay || dx == 0 || dy == 0; break;
-	case KING:   legal_movement = ax <= 1 && ay <= 1; break;
+	case KING:
+		if (ax <= 1 && ay <= 1) {
+			legal_movement = true;
+			break;
+		}
+
+		if (SQUARE_RANK(end) != (PLAYER(p) == WHITE ? 0 : 7)) {
+			legal_movement = false;
+			break;
+		}
+
+		if (SQUARE_FILE(end) == 6) {
+			legal_movement = can_castle_kingside(board, PLAYER(p));
+			break;
+		} else if (SQUARE_FILE(end) == 2) {
+			legal_movement = can_castle_queenside(board, PLAYER(p));
+			break;
+		} else {
+			legal_movement = false;
+			break;
+		}
 	case EMPTY:  legal_movement = false; break;
 	}
 
