@@ -80,13 +80,13 @@ gboolean board_draw_callback(GtkWidget *widget, cairo_t *cr, gpointer data)
 	for (uint file = 0; file < BOARD_SIZE; file++) {
 		for (int rank = BOARD_SIZE - 1; rank >= 0; rank--) {
 			if ((rank + file) % 2 == 0) {
-				// light squares
-				cairo_set_source_rgb(cr, 0.952941, 0.952941, 0.952941);
+				// dark squares
+				cairo_set_source_rgb(cr, 0.450980, 0.537255, 0.713725);
 				cairo_rectangle(cr, 0, 0, square_size, square_size);
 				cairo_fill(cr);
 			} else {
-				// dark squares
-				cairo_set_source_rgb(cr, 0.450980, 0.537255, 0.713725);
+				// light squares
+				cairo_set_source_rgb(cr, 0.952941, 0.952941, 0.952941);
 				cairo_rectangle(cr, 0, 0, square_size, square_size);
 				cairo_fill(cr);
 			}
