@@ -3,6 +3,7 @@
 #include <ctype.h>
 #include "board.h"
 #include "misc.h"
+#include "moves.h"
 
 // Converts a character into a piece, using the standard used in PGN and FEN.
 Piece piece_from_char(char c)
@@ -143,4 +144,31 @@ void print_board(Board *b)
 	}
 	puts("..........");
 	printf("%s to move\n", b->turn == WHITE ? "White" : "Black");
+}
+
+bool under_attack(Board *board, Square square, Player attacker)
+{
+	// The easiest way to do this without duplicating logic from legal_move
+	// is to put an enemy piece there and then check if moving there is legal.
+	// This will trigger the logic in legal_move for stuff like pawn captures.
+	Piece initial_piece = PIECE_AT_SQUARE(board, square);
+	PIECE_AT_SQUARE(board, square) =
+		PIECE(attacker == WHITE ? BLACK : WHITE, PAWN);
+
+	bool ret = false;
+
+	for (uint rank = 0; rank < BOARD_SIZE; rank++) {
+		for (uint file = 0; file < BOARD_SIZE; file++) {
+			Piece p = PIECE_AT(board, file, rank);
+			Move m = MOVE(SQUARE(file, rank), square);
+			if (PLAYER(p) == attacker && legal_move(board, m)) {
+				ret = true;
+				goto cleanup;
+			}
+		}
+	}
+
+cleanup:
+	PIECE_AT_SQUARE(board, square) = initial_piece;
+	return ret;
 }

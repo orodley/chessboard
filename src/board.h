@@ -97,6 +97,7 @@ Piece piece_from_char(char c);
 char char_from_piece(Piece p);
 bool from_fen(Board *board, const char *fen_str);
 void print_board(Board *b);
+bool under_attack(Board *board, Square square, Player attacker);
 
 
 extern char *start_board_fen;
