@@ -1,9 +1,24 @@
+#include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <ctype.h>
 #include "board.h"
 #include "misc.h"
 #include "moves.h"
+
+void copy_board(Board *dst, Board *src)
+{
+	dst->turn = src->turn;
+	dst->castling[0] = src->castling[0];
+	dst->castling[1] = src->castling[1];
+	dst->en_passant = src->en_passant;
+	dst->half_move_clock = src->half_move_clock;
+	dst->move_number = src->move_number;
+
+	for (uint file = 0; file < BOARD_SIZE; file++)
+		for (uint rank = 0; rank < BOARD_SIZE; rank++)
+			PIECE_AT(dst, file, rank) = PIECE_AT(src, file, rank);
+}
 
 // Converts a character into a piece, using the standard used in PGN and FEN.
 Piece piece_from_char(char c)
@@ -154,6 +169,19 @@ bool under_attack(Board *board, Square square, Player attacker)
 	Piece initial_piece = PIECE_AT_SQUARE(board, square);
 	PIECE_AT_SQUARE(board, square) =
 		PIECE(attacker == WHITE ? BLACK : WHITE, PAWN);
+	Player initial_turn = board->turn;
+	board->turn = attacker;
+
+	// We need to make sure we don't have infinite recursion in legal_move.
+	// This can happen with looking for checks - we need to see if there are
+	// any moves that put us in check to decide if the move is legal, but to
+	// see if we are in check we need to look at all the moves our opponent
+	// can make. And checking those moves will follow the same process.
+	//
+	// However, we don't actually need to see if the moves put us into check in
+	// this case, as it doesn't matter if taking their king puts us in check;
+	// we've already won.
+	bool care_about_check = PIECE_TYPE(initial_piece) != KING;
 
 	bool ret = false;
 
@@ -161,7 +189,8 @@ bool under_attack(Board *board, Square square, Player attacker)
 		for (uint file = 0; file < BOARD_SIZE; file++) {
 			Piece p = PIECE_AT(board, file, rank);
 			Move m = MOVE(SQUARE(file, rank), square);
-			if (PLAYER(p) == attacker && legal_move(board, m)) {
+			if (PLAYER(p) == attacker &&
+					legal_move(board, m, care_about_check)) {
 				ret = true;
 				goto cleanup;
 			}
@@ -170,5 +199,25 @@ bool under_attack(Board *board, Square square, Player attacker)
 
 cleanup:
 	PIECE_AT_SQUARE(board, square) = initial_piece;
+	board->turn = initial_turn;
 	return ret;
+}
+
+bool in_check(Board *board, Player p)
+{
+	Square king_location = NULL_SQUARE;
+	Piece king = PIECE(p, KING);
+
+	for (uint rank = 0; rank < BOARD_SIZE; rank++) {
+		for (uint file = 0; file < BOARD_SIZE; file++) {
+			if (PIECE_AT(board, file, rank) == king) {
+				king_location = SQUARE(file, rank);
+				goto done;
+			}
+		}
+	}
+
+done:
+	assert(king_location != NULL_SQUARE); // both players should have a king
+	return under_attack(board, king_location, p == WHITE ? BLACK : WHITE);
 }

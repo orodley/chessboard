@@ -5,11 +5,11 @@
 #include "moves.h"
 
 // TODO: Increment/reset half-move clock
+// Assumes the move is legal. This is necessary as the easiest way to test
+// whether a move doesn't put the moving player in check (illegal) is to
+// perform the move and then test if they are in check.
 void perform_move(Board *board, Move move)
 {
-	if (!legal_move(board, move))
-		return;
-
 	Square start = START_SQUARE(move);
 	Square end = END_SQUARE(move);
 
@@ -36,9 +36,8 @@ void perform_move(Board *board, Move move)
 }
 
 // TODO
-// * Moving into check
 // * Castling
-bool legal_move(Board *board, Move move)
+bool legal_move(Board *board, Move move, bool check_for_check)
 {
 	Square start = START_SQUARE(move);
 	Square end = END_SQUARE(move);
@@ -47,12 +46,16 @@ bool legal_move(Board *board, Move move)
 	Piece p = PIECE_AT_SQUARE(board, start);
 	Piece at_end_square = PIECE_AT_SQUARE(board, end);
 
+	// Can't move a piece that isn't there
+	if (p == EMPTY)
+		return false;
+
 	// Can only move if it's your turn
 	if (PLAYER(p) != board->turn)
 		return false;
 
 	// Can't capture your own pieces
-	if (p == EMPTY || (at_end_square != EMPTY && PLAYER(at_end_square) == PLAYER(p)))
+	if (at_end_square != EMPTY && PLAYER(at_end_square) == PLAYER(p))
 		return false;
 	
 	// Can't "move" a piece by putting it back onto the same square
@@ -79,35 +82,62 @@ bool legal_move(Board *board, Move move)
 	}
 
 	// Now handle each type of movement
+	bool legal_movement = false;
 	switch (PIECE_TYPE(p)) {
-	case KNIGHT: return (ax == 1 && ay == 2) || (ax == 2 && ay == 1);
 	case PAWN:
 		if ((PLAYER(p) == WHITE && SQUARE_RANK(start) == 1) ||
 			(PLAYER(p) == BLACK && SQUARE_RANK(start) == 6)) {
-			if (ay != 1 && ay != 2)
-				return false;
+			if (ay != 1 && ay != 2) {
+				legal_movement = false;
+				break;
+			}
 		} else if (ay != 1) {
-			return false;
+			legal_movement = false;
+			break;
 		}
 
-		if (y_direction != (PLAYER(p) == WHITE ? 1 : -1))
-			return false;
+		if (y_direction != (PLAYER(p) == WHITE ? 1 : -1)) {
+			legal_movement = false;
+			break;
+		}
 
-		if (dx == 0)
-			return at_end_square == EMPTY;
+		if (dx == 0) {
+			legal_movement = at_end_square == EMPTY;
+			break;
+		}
 
-		if (dx == 1 || dx == -1)
-			return (at_end_square != EMPTY &&
-						PLAYER(at_end_square) != PLAYER(p)) ||
+		if (dx == 1 || dx == -1) {
+			legal_movement = (at_end_square != EMPTY &&
+					PLAYER(at_end_square) != PLAYER(p)) ||
 					end == board->en_passant;
+			break;
+		}
 
-		return false;
-	case BISHOP: return ax == ay;
-	case ROOK: return dx == 0 || dy == 0;
-	case QUEEN: return ax == ay || dx == 0 || dy == 0;
-	case KING: return ax <= 1 && ay <= 1;
-	case EMPTY: return false;
+		legal_movement = false;
+		break;
+	case KNIGHT:
+		legal_movement = (ax == 1 && ay == 2) || (ax == 2 && ay == 1);
+		break;
+	case BISHOP: legal_movement = ax == ay; break;
+	case ROOK:   legal_movement = dx == 0 || dy == 0; break;
+	case QUEEN:  legal_movement = ax == ay || dx == 0 || dy == 0; break;
+	case KING:   legal_movement = ax <= 1 && ay <= 1; break;
+	case EMPTY:  legal_movement = false; break;
 	}
 
-	return false;
+	if (!legal_movement)
+		return false;
+
+	// At this point everything looks fine. The only thing left to check is
+	// whether the move puts us in check. We've checked enough of the move
+	// that perform_move should be able to handle it.
+	if (check_for_check) {
+		Board copy;
+		copy_board(&copy, board);
+		perform_move(&copy, move);
+
+		return !in_check(&copy, PLAYER(p));
+	} else {
+		return legal_movement;
+	}
 }
