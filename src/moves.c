@@ -4,6 +4,7 @@
 #include "board.h"
 #include "moves.h"
 
+// TODO: Increment/reset half-move clock
 void perform_move(Board *board, Move move)
 {
 	if (!legal_move(board, move))
@@ -12,15 +13,18 @@ void perform_move(Board *board, Move move)
 	Square start = START_SQUARE(move);
 	Square end = END_SQUARE(move);
 
+	// Check if we're capturing en passant
 	Piece p = PIECE_AT_SQUARE(board, start);
 	if (PIECE_TYPE(p) == PAWN && end == board->en_passant)
 		PIECE_AT(board, SQUARE_FILE(end), PLAYER(p) == WHITE ? 4 : 3) = EMPTY;
 
+	// Check if this move enables our opponent to perform en passant
 	uint dy = SQUARE_RANK(end) - SQUARE_RANK(start);
 	if (PIECE_TYPE(p) == PAWN && abs(dy) == 2) {
 		int en_passant_rank = PLAYER(p) == WHITE ? 2 : 5;
 		board->en_passant = SQUARE(SQUARE_FILE(start), en_passant_rank);
 	} else {
+		// Otherwise reset en passant
 		board->en_passant = NULL_SQUARE;
 	}
 
@@ -40,9 +44,11 @@ bool legal_move(Board *board, Move move)
 	Piece p = PIECE_AT_SQUARE(board, start);
 	Piece at_end_square = PIECE_AT_SQUARE(board, end);
 
+	// Can't capture your own pieces
 	if (p == EMPTY || (at_end_square != EMPTY && PLAYER(at_end_square) == PLAYER(p)))
 		return false;
 	
+	// Can't "move" a piece by putting it back onto the same square
 	if (dx == 0 && dy == 0)
 		return false;
 
@@ -52,6 +58,7 @@ bool legal_move(Board *board, Move move)
 	int x_direction = ax == 0 ? 0 : dx / ax;
 	int y_direction = ay == 0 ? 0 : dy / ay;
 
+	// Pieces other than knights are blocked by intervening pieces
 	if (PIECE_TYPE(p) != KNIGHT) {
 		int file = SQUARE_FILE(start) + x_direction;
 		int rank = SQUARE_RANK(start) + y_direction;
@@ -64,6 +71,7 @@ bool legal_move(Board *board, Move move)
 		}
 	}
 
+	// Now handle each type of movement
 	switch (PIECE_TYPE(p)) {
 	case KNIGHT: return (ax == 1 && ay == 2) || (ax == 2 && ay == 1);
 	case PAWN:
