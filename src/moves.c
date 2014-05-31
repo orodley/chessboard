@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "board.h"
 #include "moves.h"
 
@@ -11,17 +12,18 @@ void perform_move(Board *board, Move move)
 {
 	Square start = START_SQUARE(move);
 	Square end = END_SQUARE(move);
+	Piece p = PIECE_AT_SQUARE(board, start);
+	Piece_type type = PIECE_TYPE(p);
 
 	board->half_move_clock++;
 
 	// Check if we're capturing en passant
-	Piece p = PIECE_AT_SQUARE(board, start);
-	if (PIECE_TYPE(p) == PAWN && end == board->en_passant)
+	if (type == PAWN && end == board->en_passant)
 		PIECE_AT(board, SQUARE_FILE(end), PLAYER(p) == WHITE ? 4 : 3) = EMPTY;
 
 	// Check if this move enables our opponent to perform en passant
 	uint dy = SQUARE_RANK(end) - SQUARE_RANK(start);
-	if (PIECE_TYPE(p) == PAWN && abs(dy) == 2) {
+	if (type == PAWN && abs(dy) == 2) {
 		int en_passant_rank = PLAYER(p) == WHITE ? 2 : 5;
 		board->en_passant = SQUARE(SQUARE_FILE(start), en_passant_rank);
 	} else {
@@ -31,7 +33,7 @@ void perform_move(Board *board, Move move)
 
 	// Check if we're castling so we can move the rook too
 	uint dx = SQUARE_FILE(end) - SQUARE_FILE(start);
-	if (PIECE_TYPE(p) == KING && abs(dx) > 1) {
+	if (type == KING && abs(dx) > 1) {
 		uint rank = PLAYER(p) == WHITE ? 0 : 7;
 		bool kingside = SQUARE_FILE(end) == 6;
 		if (kingside) {
@@ -45,10 +47,10 @@ void perform_move(Board *board, Move move)
 
 	// Check if we're depriving ourself of castling rights
 	Castling *c = &board->castling[PLAYER(p)];
-	if (PIECE_TYPE(p) == KING) {
+	if (type == KING) {
 		c->kingside = false;
 		c->queenside = false;
-	} else if (PIECE_TYPE(p) == ROOK) {
+	} else if (type == ROOK) {
 		if (SQUARE_FILE(start) == 7) {
 			c->kingside = false;
 		} else if (SQUARE_FILE(start) == 0) {
@@ -57,7 +59,7 @@ void perform_move(Board *board, Move move)
 	}
 
 	// Check if we should reset the half-move clock
-	if (PIECE_TYPE(p) == PAWN || PIECE_AT_SQUARE(board, end) != EMPTY)
+	if (type == PAWN || PIECE_AT_SQUARE(board, end) != EMPTY)
 		board->half_move_clock = 0;
 
 	// Update the turn tracker
@@ -74,6 +76,7 @@ bool legal_move(Board *board, Move move, bool check_for_check)
 	int dx = SQUARE_FILE(end) - SQUARE_FILE(start);
 	int dy = SQUARE_RANK(end) - SQUARE_RANK(start);
 	Piece p = PIECE_AT_SQUARE(board, start);
+	Piece_type type = PIECE_TYPE(p);
 	Piece at_end_square = PIECE_AT_SQUARE(board, end);
 
 	// Can't move a piece that isn't there
@@ -99,7 +102,7 @@ bool legal_move(Board *board, Move move, bool check_for_check)
 	int y_direction = ay == 0 ? 0 : dy / ay;
 
 	// Pieces other than knights are blocked by intervening pieces
-	if (PIECE_TYPE(p) != KNIGHT) {
+	if (type != KNIGHT) {
 		int file = SQUARE_FILE(start) + x_direction;
 		int rank = SQUARE_RANK(start) + y_direction;
 		while (!(file == SQUARE_FILE(end) && rank == SQUARE_RANK(end))) {
@@ -113,7 +116,7 @@ bool legal_move(Board *board, Move move, bool check_for_check)
 
 	// Now handle each type of movement
 	bool legal_movement = false;
-	switch (PIECE_TYPE(p)) {
+	switch (type) {
 	case PAWN:
 		if ((PLAYER(p) == WHITE && SQUARE_RANK(start) == 1) ||
 			(PLAYER(p) == BLACK && SQUARE_RANK(start) == 6)) {
@@ -181,13 +184,94 @@ bool legal_move(Board *board, Move move, bool check_for_check)
 	// At this point everything looks fine. The only thing left to check is
 	// whether the move puts us in check. We've checked enough of the move
 	// that perform_move should be able to handle it.
-	if (check_for_check) {
-		Board copy;
-		copy_board(&copy, board);
-		perform_move(&copy, move);
-
-		return !in_check(&copy, PLAYER(p));
-	} else {
+	if (check_for_check)
+		return !gives_check(board, move, PLAYER(p));
+	else
 		return legal_movement;
+}
+
+bool gives_check(Board *board, Move move, Player player)
+{
+	Board copy;
+	copy_board(&copy, board);
+	perform_move(&copy, move);
+
+	return in_check(&copy, player);
+}
+
+// Check whether we need to disambiguate between two pieces for a particular
+// move. e.g.: there are two rooks that can move to the square. If so, return
+// the location of the other piece that is confusing things.
+Square ambiguous_piece(Board *board, Move move)
+{
+	Piece_type type = PIECE_TYPE(PIECE_AT_SQUARE(board, START_SQUARE(move)));
+	for (uint file = 0; file < BOARD_SIZE; file++) {
+		for (uint rank = 0; rank < BOARD_SIZE; rank++) {
+			Square curr_square = SQUARE(file, rank);
+			if (curr_square == START_SQUARE(move))
+				continue;
+			if (PIECE_TYPE(PIECE_AT_SQUARE(board, curr_square)) == type &&
+					legal_move(board, MOVE(curr_square, END_SQUARE(move)), true))
+				return curr_square;
+		}
 	}
+
+	return NULL_SQUARE;
+}
+
+// str should have space for at least 7 (MAX_ALGEBRAIC_LENGTH) characters, to
+// be able to fit the longest of moves. e.g.: Raxd1+\0
+void move_notation(Board *board, Move move, char *str)
+{
+	uint i = 0;
+	Square start = START_SQUARE(move);
+	Square end = END_SQUARE(move);
+	Piece p = PIECE_AT_SQUARE(board, start);
+	Piece_type type = PIECE_TYPE(p);
+
+	// Castling
+	if (type == KING && abs(SQUARE_FILE(start) - SQUARE_FILE(end)) > 1) {
+		if (SQUARE_FILE(end) == 6)
+			strcpy(str, "O-O");
+		else
+			strcpy(str, "O-O-O");
+
+		return;
+	}
+
+	bool capture = PIECE_AT_SQUARE(board, END_SQUARE(move)) != EMPTY;
+
+	// Add the letter denoting the type of piece moving
+	if (type != PAWN)
+		str[i++] = "\0\0NBRQK"[type];
+
+	// Add the number/letter of the rank/file of the moving piece if necessary
+	Square ambig = ambiguous_piece(board, move);
+	// We always add the file if it's a pawn capture
+	if (ambig != NULL_SQUARE || (type == PAWN && capture)) {
+		char disambiguate;
+		if (SQUARE_FILE(ambig) == SQUARE_FILE(start))
+			disambiguate = RANK_CHAR(SQUARE_RANK(start));
+		else
+			disambiguate = FILE_CHAR(SQUARE_FILE(start));
+
+		str[i++] = disambiguate;
+	}
+
+	// Add an 'x' if its a capture
+	if (capture)
+		str[i++] = 'x';
+
+	// Add the target square
+	str[i++] = FILE_CHAR(SQUARE_FILE(end));
+	str[i++] = RANK_CHAR(SQUARE_RANK(end));
+
+	// Add a '+' if its check
+	// TODO: macro for the other player thing
+	if (gives_check(board, move, PLAYER(p) == WHITE ? BLACK : WHITE))
+		str[i++] = '+';
+
+	// TODO: '#' for mate
+	
+	str[i++] = '\0';
 }

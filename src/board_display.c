@@ -40,7 +40,7 @@ uint get_square_size(GtkWidget *board)
 }
 
 Board current_board;
-Game game_root;
+Game *game_root;
 Game *current_game;
 
 
@@ -156,6 +156,10 @@ gboolean board_mouse_up_callback(GtkWidget *widget, GdkEvent *event,
 	Square drag_target = board_coords_to_square(widget, e->x, e->y);
 	Move m = MOVE(drag_source, drag_target);
 	if (legal_move(board, m, true)) {
+		char notation[MAX_NOTATION_LENGTH];
+		move_notation(board, m, notation);
+		puts(notation);
+
 		perform_move(board, m);
 		current_game = add_child(current_game, m);
 	}

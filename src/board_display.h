@@ -5,6 +5,7 @@
 #include <gtk/gtk.h>
 #include "board.h"
 #include "game.h"
+#include "moves.h"
 
 #define DEFAULT_SQUARE_SIZE 50
 

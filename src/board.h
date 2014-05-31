@@ -8,17 +8,6 @@
 #define BOARD_SIZE 8
 #define PLAYERS 2
 
-// A move is represented as 4 bytes, with the start square in the two most
-// significant bytes, and the end square in the two least significant
-// bytes. Each pair of bytes has the file in the most significant byte, and
-// the rank in the least significant byte.
-typedef uint_least32_t Move;
-#define MOVE(start, end) ((Move)(((start) << 16) | (end)))
-#define START_SQUARE(m)  ((m) >> 16)
-#define END_SQUARE(m)    ((m) & 0xFFFF)
-
-#define NULL_MOVE ((Move)(~((Move)0)))
-
 typedef uint_least16_t Square;
 #define SQUARE(file, rank) (((file) << 8) | (rank))
 #define SQUARE_FILE(s) ((s) >> 8)

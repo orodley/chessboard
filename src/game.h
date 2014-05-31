@@ -2,6 +2,7 @@
 #define GAME_H_
 
 #include "board.h"
+#include "moves.h"
 
 // Games are represented as trees where each node has an arbitrary number of
 // children. This is to make variations easy to store. Linked lists are used
