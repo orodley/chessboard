@@ -3,6 +3,8 @@
 
 #include <stdbool.h>
 #include <gtk/gtk.h>
+#include "board.h"
+#include "game.h"
 
 #define DEFAULT_SQUARE_SIZE 50
 
@@ -14,5 +16,9 @@ gboolean board_mouse_up_callback(GtkWidget *widget, GdkEvent *event,
 		gpointer user_data);
 gboolean board_mouse_move_callback(GtkWidget *widget, GdkEvent *event,
 		gpointer user_data);
+
+extern Board current_board;
+extern Game *game_root;
+extern Game *current_game;
 
 #endif // include guard

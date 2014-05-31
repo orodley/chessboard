@@ -17,6 +17,8 @@ typedef uint_least32_t Move;
 #define START_SQUARE(m)  ((m) >> 16)
 #define END_SQUARE(m)    ((m) & 0xFFFF)
 
+#define NULL_MOVE ((Move)(~((Move)0)))
+
 typedef uint_least16_t Square;
 #define SQUARE(file, rank) (((file) << 8) | (rank))
 #define SQUARE_FILE(s) ((s) >> 8)

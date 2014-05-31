@@ -39,6 +39,11 @@ uint get_square_size(GtkWidget *board)
 		max_square_height;
 }
 
+Board current_board;
+Game game_root;
+Game *current_game;
+
+
 Square drag_source = NULL_SQUARE;
 uint mouse_x;
 uint mouse_y;
@@ -150,8 +155,10 @@ gboolean board_mouse_up_callback(GtkWidget *widget, GdkEvent *event,
 
 	Square drag_target = board_coords_to_square(widget, e->x, e->y);
 	Move m = MOVE(drag_source, drag_target);
-	if (legal_move(board, m, true))
+	if (legal_move(board, m, true)) {
 		perform_move(board, m);
+		current_game = add_child(current_game, m);
+	}
 
 	drag_source = NULL_SQUARE;
 	gtk_widget_queue_draw(widget);

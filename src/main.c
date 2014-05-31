@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "board.h"
 #include "board_display.h"
+#include "game.h"
 
 char *piece_svgs = "pieces/merida/";
 
@@ -24,11 +25,13 @@ int main(int argc, char *argv[])
 		fen = start_board_fen;
 	}
 
-	Board board;
-	if (!from_fen(&board, fen)) {
+	if (!from_fen(&current_board, fen)) {
 		printf("Couldn't parse given FEN string:\n%s\n", fen);
 		return 1;
 	}
+
+	game_root = new_game();
+	current_game = game_root;
 
 	GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_title(GTK_WINDOW(window), PROG_NAME);
@@ -46,11 +49,11 @@ int main(int argc, char *argv[])
 			GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
 			GDK_POINTER_MOTION_MASK);
 	g_signal_connect(G_OBJECT(drawing_area), "draw",
-			G_CALLBACK(board_draw_callback), &board);
+			G_CALLBACK(board_draw_callback), &current_board);
 	g_signal_connect(G_OBJECT(drawing_area), "button-press-event",
-			G_CALLBACK(board_mouse_down_callback), &board);
+			G_CALLBACK(board_mouse_down_callback), &current_board);
 	g_signal_connect(G_OBJECT(drawing_area), "button-release-event",
-			G_CALLBACK(board_mouse_up_callback), &board);
+			G_CALLBACK(board_mouse_up_callback), &current_board);
 	g_signal_connect(G_OBJECT(drawing_area), "motion-notify-event",
 			G_CALLBACK(board_mouse_move_callback), NULL);
 
