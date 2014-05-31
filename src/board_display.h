@@ -1,5 +1,5 @@
-#ifndef _BOARD_DISPLAY_H
-#define _BOARD_DISPLAY_H
+#ifndef BOARD_DISPLAY_H_
+#define BOARD_DISPLAY_H_
 
 #include <stdbool.h>
 #include <gtk/gtk.h>
@@ -15,4 +15,4 @@ gboolean board_mouse_up_callback(GtkWidget *widget, GdkEvent *event,
 gboolean board_mouse_move_callback(GtkWidget *widget, GdkEvent *event,
 		gpointer user_data);
 
-#endif
+#endif // include guard

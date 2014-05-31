@@ -1,5 +1,5 @@
-#ifndef _MOVES_H
-#define _MOVES_H
+#ifndef MOVES_H_
+#define MOVES_H_
 
 void perform_move(Board *board, Move move);
 bool legal_move(Board *board, Move move);

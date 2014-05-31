@@ -1,5 +1,5 @@
-#ifndef _BOARD_H
-#define _BOARD_H
+#ifndef BOARD_H_
+#define BOARD_H_
 
 #include <stdbool.h>
 #include <stdint.h>
