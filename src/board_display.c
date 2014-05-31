@@ -150,12 +150,7 @@ gboolean board_mouse_up_callback(GtkWidget *widget, GdkEvent *event,
 
 	Square drag_target = board_coords_to_square(widget, e->x, e->y);
 	Move m = MOVE(drag_source, drag_target);
-
-	if (legal_move(board, m)) {
-		PIECE_AT_SQUARE(board, END_SQUARE(m)) =
-			PIECE_AT_SQUARE(board, START_SQUARE(m));
-		PIECE_AT_SQUARE(board, START_SQUARE(m)) = EMPTY;
-	}
+	perform_move(board, m);
 
 	drag_source = NULL_SQUARE;
 	gtk_widget_queue_draw(widget);

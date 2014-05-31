@@ -2,11 +2,35 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "board.h"
+#include "moves.h"
+
+void perform_move(Board *board, Move move)
+{
+	if (!legal_move(board, move))
+		return;
+
+	Square start = START_SQUARE(move);
+	Square end = END_SQUARE(move);
+
+	Piece p = PIECE_AT_SQUARE(board, start);
+	if (PIECE_TYPE(p) == PAWN && end == board->en_passant)
+		PIECE_AT(board, SQUARE_FILE(end), PLAYER(p) == WHITE ? 4 : 3) = EMPTY;
+
+	uint dy = SQUARE_RANK(end) - SQUARE_RANK(start);
+	if (PIECE_TYPE(p) == PAWN && abs(dy) == 2) {
+		int en_passant_rank = PLAYER(p) == WHITE ? 2 : 5;
+		board->en_passant = SQUARE(SQUARE_FILE(start), en_passant_rank);
+	} else {
+		board->en_passant = NULL_SQUARE;
+	}
+
+	PIECE_AT_SQUARE(board, end) = PIECE_AT_SQUARE(board, start);
+	PIECE_AT_SQUARE(board, start) = EMPTY;
+}
 
 // TODO
 // * Moving into check
 // * Castling
-// * En passant
 bool legal_move(Board *board, Move move)
 {
 	Square start = START_SQUARE(move);
@@ -58,7 +82,9 @@ bool legal_move(Board *board, Move move)
 			return true;
 
 		if (dx == 1 || dx == -1)
-			return at_end_square != EMPTY && PLAYER(at_end_square) != PLAYER(p);
+			return (at_end_square != EMPTY &&
+						PLAYER(at_end_square) != PLAYER(p)) ||
+					end == board->en_passant;
 
 		return false;
 	case BISHOP: return ax == ay;
