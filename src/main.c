@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
 	Board board;
 	if (!from_fen(&board, fen)) {
 		printf("Couldn't parse given FEN string:\n%s\n", fen);
-		return 0;
+		return 1;
 	}
 
 	GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
