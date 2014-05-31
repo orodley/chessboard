@@ -87,7 +87,7 @@ bool legal_move(Board *board, Move move)
 			return false;
 
 		if (dx == 0)
-			return true;
+			return at_end_square == EMPTY;
 
 		if (dx == 1 || dx == -1)
 			return (at_end_square != EMPTY &&
