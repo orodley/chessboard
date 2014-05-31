@@ -4,7 +4,6 @@
 #include "board.h"
 #include "moves.h"
 
-// TODO: Increment/reset half-move clock
 // Assumes the move is legal. This is necessary as the easiest way to test
 // whether a move doesn't put the moving player in check (illegal) is to
 // perform the move and then test if they are in check.
@@ -12,6 +11,8 @@ void perform_move(Board *board, Move move)
 {
 	Square start = START_SQUARE(move);
 	Square end = END_SQUARE(move);
+
+	board->half_move_clock++;
 
 	// Check if we're capturing en passant
 	Piece p = PIECE_AT_SQUARE(board, start);
@@ -54,6 +55,10 @@ void perform_move(Board *board, Move move)
 			c->queenside = false;
 		}
 	}
+
+	// Check if we should reset the half-move clock
+	if (PIECE_TYPE(p) == PAWN || PIECE_AT_SQUARE(board, end) != EMPTY)
+		board->half_move_clock = 0;
 
 	// Update the turn tracker
 	board->turn = 1 - board->turn; // (0, 1) = (BLACK, WHITE) & 0 -> 1, 1 -> 0
