@@ -1,5 +1,5 @@
-#ifndef _MISC_H
-#define _MISC_H
+#ifndef MISC_H_
+#define MISC_H_
 
 // Miscellaneous stuff
 
