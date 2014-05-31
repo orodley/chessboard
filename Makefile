@@ -1,4 +1,4 @@
-NAME = simple-chess
+NAME = chessboard
 
 CC = gcc
 CFLAGS = -g -Wall -Wextra -Werror -std=c99 -pedantic -DPROG_NAME=\"$(NAME)\"
