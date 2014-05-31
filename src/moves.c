@@ -28,6 +28,9 @@ void perform_move(Board *board, Move move)
 		board->en_passant = NULL_SQUARE;
 	}
 
+	// Update the turn tracker
+	board->turn = 1 - board->turn; // (0, 1) = (BLACK, WHITE) & 0 -> 1, 1 -> 0
+
 	PIECE_AT_SQUARE(board, end) = PIECE_AT_SQUARE(board, start);
 	PIECE_AT_SQUARE(board, start) = EMPTY;
 }
@@ -43,6 +46,10 @@ bool legal_move(Board *board, Move move)
 	int dy = SQUARE_RANK(end) - SQUARE_RANK(start);
 	Piece p = PIECE_AT_SQUARE(board, start);
 	Piece at_end_square = PIECE_AT_SQUARE(board, end);
+
+	// Can only move if it's your turn
+	if (PLAYER(p) != board->turn)
+		return false;
 
 	// Can't capture your own pieces
 	if (p == EMPTY || (at_end_square != EMPTY && PLAYER(at_end_square) == PLAYER(p)))
