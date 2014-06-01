@@ -25,7 +25,7 @@ typedef enum Player
 	WHITE = 1,
 } Player;
 
-#define PIECE_TYPES 6
+#define OTHER_PLAYER(p) ((p) == WHITE ? BLACK : WHITE)
 
 // The order of these matters
 typedef enum Piece_type
@@ -38,6 +38,8 @@ typedef enum Piece_type
 	QUEEN,
 	KING,
 } Piece_type;
+
+#define PIECE_TYPES 6
 
 #define PLAYER(x) ((Player)((x) >> (sizeof(Piece) * 8 - 1)))
 #define PIECE_TYPE(x) ((Piece_type)((x) & ~(1 << (sizeof(Piece) * 8 - 1))))

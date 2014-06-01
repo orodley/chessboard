@@ -278,10 +278,10 @@ void move_notation(Board *board, Move move, char *str)
 	// TODO: macro for the other player thing
 
 	// Add a '#' if its mate
-	if (gives_mate(board, move, PLAYER(p) == WHITE ? BLACK : WHITE))
+	if (gives_mate(board, move, OTHER_PLAYER(PLAYER(p))))
 		str[i++] = '#';
 	// Add a '+' if its check
-	else if (gives_check(board, move, PLAYER(p) == WHITE ? BLACK : WHITE))
+	else if (gives_check(board, move, OTHER_PLAYER(PLAYER(p))))
 		str[i++] = '+';
 
 	str[i++] = '\0';

@@ -206,7 +206,7 @@ Square find_attacking_piece(Board *board, Square square, Player attacker)
 	// This will trigger the logic in legal_move for pawn captures.
 	Piece initial_piece = PIECE_AT_SQUARE(board, square);
 	PIECE_AT_SQUARE(board, square) =
-		PIECE(attacker == WHITE ? BLACK : WHITE, PAWN);
+		PIECE(OTHER_PLAYER(attacker), PAWN);
 
 	Square s = find_piece_looking_at(board, square, attacker);
 
@@ -236,7 +236,7 @@ bool in_check(Board *board, Player p)
 {
 	Square king_location = find_king(board, p);
 	assert(king_location != NULL_SQUARE); // both players should have a king
-	return under_attack(board, king_location, p == WHITE ? BLACK : WHITE);
+	return under_attack(board, king_location, OTHER_PLAYER(p));
 }
 
 bool checkmate(Board *board, Player p)
@@ -246,7 +246,7 @@ bool checkmate(Board *board, Player p)
 		return false;
 
 	Square king_location = find_king(board, p);
-	Player other = p == WHITE ? BLACK : WHITE;
+	Player other = OTHER_PLAYER(p);
 	int file = SQUARE_FILE(king_location);
 	int rank = SQUARE_RANK(king_location);
 
@@ -300,7 +300,7 @@ bool checkmate(Board *board, Player p)
 bool can_castle_kingside(Board *board, Player p)
 {
 	uint rank = p == WHITE ? 0 : 7;
-	Player other = p == WHITE ? BLACK : WHITE;
+	Player other = OTHER_PLAYER(p);
 
 	return board->castling[p].kingside && !in_check(board, p) &&
 		PIECE_AT(board, 5, rank) == EMPTY &&
@@ -312,7 +312,7 @@ bool can_castle_kingside(Board *board, Player p)
 bool can_castle_queenside(Board *board, Player p)
 {
 	uint rank = p == WHITE ? 0 : 7;
-	Player other = p == WHITE ? BLACK : WHITE;
+	Player other = OTHER_PLAYER(p);
 
 	return board->castling[p].kingside && !in_check(board, p) &&
 		PIECE_AT(board, 3, rank) == EMPTY &&
