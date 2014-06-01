@@ -199,6 +199,15 @@ bool gives_check(Board *board, Move move, Player player)
 	return in_check(&copy, player);
 }
 
+bool gives_mate(Board *board, Move move, Player player)
+{
+	Board copy;
+	copy_board(&copy, board);
+	perform_move(&copy, move);
+
+	return checkmate(&copy, player);
+}
+
 // Check whether we need to disambiguate between two pieces for a particular
 // move. e.g.: there are two rooks that can move to the square. If so, return
 // the location of the other piece that is confusing things.
@@ -266,12 +275,14 @@ void move_notation(Board *board, Move move, char *str)
 	str[i++] = FILE_CHAR(SQUARE_FILE(end));
 	str[i++] = RANK_CHAR(SQUARE_RANK(end));
 
-	// Add a '+' if its check
 	// TODO: macro for the other player thing
-	if (gives_check(board, move, PLAYER(p) == WHITE ? BLACK : WHITE))
+
+	// Add a '#' if its mate
+	if (gives_mate(board, move, PLAYER(p) == WHITE ? BLACK : WHITE))
+		str[i++] = '#';
+	// Add a '+' if its check
+	else if (gives_check(board, move, PLAYER(p) == WHITE ? BLACK : WHITE))
 		str[i++] = '+';
 
-	// TODO: '#' for mate
-	
 	str[i++] = '\0';
 }

@@ -91,6 +91,7 @@ bool from_fen(Board *board, const char *fen_str);
 void print_board(Board *b);
 bool under_attack(Board *board, Square square, Player attacker);
 bool in_check(Board *board, Player p);
+bool checkmate(Board *board, Player p);
 bool can_castle_kingside(Board *board, Player p);
 bool can_castle_queenside(Board *board, Player p);
 

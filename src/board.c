@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <ctype.h>
 #include "board.h"
 #include "misc.h"
@@ -161,17 +162,8 @@ void print_board(Board *b)
 	printf("%s to move\n", b->turn == WHITE ? "White" : "Black");
 }
 
-bool under_attack(Board *board, Square square, Player attacker)
+Square find_piece_looking_at(Board *board, Square square, Player piece_owner)
 {
-	// The easiest way to do this without duplicating logic from legal_move
-	// is to put an enemy piece there and then check if moving there is legal.
-	// This will trigger the logic in legal_move for stuff like pawn captures.
-	Piece initial_piece = PIECE_AT_SQUARE(board, square);
-	PIECE_AT_SQUARE(board, square) =
-		PIECE(attacker == WHITE ? BLACK : WHITE, PAWN);
-	Player initial_turn = board->turn;
-	board->turn = attacker;
-
 	// We need to make sure we don't have infinite recursion in legal_move.
 	// This can happen with looking for checks - we need to see if there are
 	// any moves that put us in check to decide if the move is legal, but to
@@ -181,45 +173,125 @@ bool under_attack(Board *board, Square square, Player attacker)
 	// However, we don't actually need to see if the moves put us into check in
 	// this case, as it doesn't matter if taking their king puts us in check;
 	// we've already won.
-	bool care_about_check = PIECE_TYPE(initial_piece) != KING;
+	bool care_about_check = PIECE_TYPE(PIECE_AT_SQUARE(board, square)) != KING;
 
-	bool ret = false;
+	Player initial_turn = board->turn;
+	board->turn = piece_owner;
+
+	Square ret = NULL_SQUARE;
 
 	for (uint rank = 0; rank < BOARD_SIZE; rank++) {
 		for (uint file = 0; file < BOARD_SIZE; file++) {
 			Piece p = PIECE_AT(board, file, rank);
-			Move m = MOVE(SQUARE(file, rank), square);
-			if (PLAYER(p) == attacker &&
+			Square s = SQUARE(file, rank);
+			Move m = MOVE(s, square);
+
+			if (PLAYER(p) == piece_owner &&
 					legal_move(board, m, care_about_check)) {
-				ret = true;
+				ret = s;
 				goto cleanup;
 			}
 		}
 	}
 
 cleanup:
-	PIECE_AT_SQUARE(board, square) = initial_piece;
 	board->turn = initial_turn;
 	return ret;
 }
 
-bool in_check(Board *board, Player p)
+Square find_attacking_piece(Board *board, Square square, Player attacker)
 {
-	Square king_location = NULL_SQUARE;
+	// The easiest way to do this without duplicating logic from legal_move
+	// is to put an enemy piece there and then check if moving there is legal.
+	// This will trigger the logic in legal_move for pawn captures.
+	Piece initial_piece = PIECE_AT_SQUARE(board, square);
+	PIECE_AT_SQUARE(board, square) =
+		PIECE(attacker == WHITE ? BLACK : WHITE, PAWN);
+
+	Square s = find_piece_looking_at(board, square, attacker);
+
+	PIECE_AT_SQUARE(board, square) = initial_piece;
+
+	return s;
+}
+
+bool under_attack(Board *board, Square square, Player attacker)
+{
+	return find_attacking_piece(board, square, attacker) != NULL_SQUARE;
+}
+
+Square find_king(Board *board, Player p)
+{
 	Piece king = PIECE(p, KING);
 
-	for (uint rank = 0; rank < BOARD_SIZE; rank++) {
-		for (uint file = 0; file < BOARD_SIZE; file++) {
-			if (PIECE_AT(board, file, rank) == king) {
-				king_location = SQUARE(file, rank);
-				goto done;
-			}
+	for (uint rank = 0; rank < BOARD_SIZE; rank++)
+		for (uint file = 0; file < BOARD_SIZE; file++)
+			if (PIECE_AT(board, file, rank) == king)
+				return SQUARE(file, rank);
+
+	return NULL_SQUARE;
+}
+
+bool in_check(Board *board, Player p)
+{
+	Square king_location = find_king(board, p);
+	assert(king_location != NULL_SQUARE); // both players should have a king
+	return under_attack(board, king_location, p == WHITE ? BLACK : WHITE);
+}
+
+bool checkmate(Board *board, Player p)
+{
+	// We must be in check
+	if (!in_check(board, p))
+		return false;
+
+	Square king_location = find_king(board, p);
+	Player other = p == WHITE ? BLACK : WHITE;
+	int file = SQUARE_FILE(king_location);
+	int rank = SQUARE_RANK(king_location);
+
+	// Can the king move out of check?
+	for (int dx = -1; dx < 2; dx++) {
+		for (int dy = -1; dy < 2; dy++) {
+			Move m = MOVE(king_location, SQUARE(file + dx, rank + dy));
+			if (legal_move(board, m, true))
+				return false;
 		}
 	}
 
-done:
-	assert(king_location != NULL_SQUARE); // both players should have a king
-	return under_attack(board, king_location, p == WHITE ? BLACK : WHITE);
+	// Can the attacking piece be taken?
+	Square attacker = find_attacking_piece(board, king_location, other);
+	if (under_attack(board, attacker, p))
+		return false;
+
+	// Can we block?
+	Piece_type type = PIECE_TYPE(PIECE_AT_SQUARE(board, attacker));
+	if (type != KNIGHT) {
+		int dx = SQUARE_FILE(attacker) - file;
+		int dy = SQUARE_RANK(attacker) - rank;
+
+		int ax = abs(dx);
+		int ay = abs(dy);
+
+		int x_direction = ax == 0 ? 0 : dx / ax;
+		int y_direction = ay == 0 ? 0 : dy / ay;
+
+		int file = SQUARE_FILE(king_location) + x_direction;
+		int rank = SQUARE_RANK(king_location) + y_direction;
+		while (!(file == SQUARE_FILE(attacker) &&
+					rank == SQUARE_RANK(attacker))) {
+			Square blocker = find_piece_looking_at(board, SQUARE(file, rank), p);
+			if (blocker != NULL_SQUARE &&
+					PIECE_TYPE(PIECE_AT_SQUARE(board, blocker)) != KING)
+				return false;
+
+			file += x_direction;
+			rank += y_direction;
+		}
+	}
+
+	// All outta luck
+	return true;
 }
 
 bool can_castle_kingside(Board *board, Player p)
