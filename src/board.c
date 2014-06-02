@@ -254,7 +254,7 @@ bool checkmate(Board *board, Player p)
 	for (int dx = -1; dx < 2; dx++) {
 		for (int dy = -1; dy < 2; dy++) {
 			if (file + dx < 0 || file + dx >= BOARD_SIZE ||
-				rank + dy < 0 || rank + dy >= BOARD_SIZE)
+					rank + dy < 0 || rank + dy >= BOARD_SIZE)
 				continue;
 			Move m = MOVE(king_location, SQUARE(file + dx, rank + dy));
 			if (legal_move(board, m, true))
