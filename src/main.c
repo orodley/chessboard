@@ -53,6 +53,12 @@ int main(int argc, char *argv[])
 
 	gtk_menu_shell_append(GTK_MENU_SHELL(menu_bar), file_item);
 
+	GtkWidget *tool_bar = gtk_toolbar_new();
+	gtk_toolbar_set_style(GTK_TOOLBAR(tool_bar), GTK_TOOLBAR_ICONS);
+	gtk_toolbar_set_show_arrow(GTK_TOOLBAR(tool_bar), false);
+	gtk_widget_set_halign(tool_bar, GTK_ALIGN_CENTER);
+	GtkToolItem *back_button = gtk_tool_button_new_from_stock(GTK_STOCK_GO_BACK);
+
 	GtkWidget *drawing_area = gtk_drawing_area_new();
 	gint width, height;
 	gtk_window_get_size(GTK_WINDOW(window), &width, &height);
@@ -68,9 +74,6 @@ int main(int argc, char *argv[])
 			G_CALLBACK(board_mouse_up_callback), &current_board);
 	g_signal_connect(G_OBJECT(drawing_area), "motion-notify-event",
 			G_CALLBACK(board_mouse_move_callback), NULL);
-
-	GtkWidget *tool_bar = gtk_toolbar_new();
-	GtkToolItem *back_button = gtk_tool_button_new_from_stock(GTK_STOCK_GO_BACK);
 	gtk_toolbar_insert(GTK_TOOLBAR(tool_bar), back_button, 0);
 
 	GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
@@ -79,7 +82,11 @@ int main(int argc, char *argv[])
 	gtk_container_add(GTK_CONTAINER(box), menu_bar);
 	gtk_container_add(GTK_CONTAINER(box), tool_bar);
 	gtk_container_add(GTK_CONTAINER(box), drawing_area);
-	gtk_box_set_child_packing(GTK_BOX(box), drawing_area, TRUE, TRUE, 0, GTK_PACK_START);
+
+	gtk_box_set_child_packing(GTK_BOX(box), tool_bar,
+			FALSE, FALSE, 0, GTK_PACK_START);
+	gtk_box_set_child_packing(GTK_BOX(box), drawing_area,
+			TRUE, TRUE, 0, GTK_PACK_START);
 	gtk_widget_show_all(window);
 
 	gtk_main();
