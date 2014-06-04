@@ -2,6 +2,7 @@
 #include <librsvg/rsvg.h>
 #include <librsvg/rsvg-cairo.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "board.h"
 #include "board_display.h"
@@ -161,7 +162,9 @@ gboolean board_mouse_up_callback(GtkWidget *widget, GdkEvent *event,
 		puts(notation);
 
 		perform_move(board, m);
-		current_game = add_child(current_game, m);
+		Board *copy = malloc(sizeof(Board));
+		copy_board(copy, board);
+		current_game = add_child(current_game, m, copy);
 	}
 
 	drag_source = NULL_SQUARE;

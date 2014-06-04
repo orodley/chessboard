@@ -19,10 +19,12 @@ typedef struct Game_list
 typedef struct Game
 {
 	Move move;
+	Board *board;
 	struct Game_list *children;
+	struct Game *parent;
 } Game;
 
 Game *new_game();
-Game *add_child(Game *game, Move move);
+Game *add_child(Game *game, Move move, Board *board);
 
 #endif // include guard
