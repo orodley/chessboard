@@ -12,7 +12,7 @@ Game *new_game()
 	game->board = NULL;
 	game->parent = NULL;
 
-	game->children = malloc(sizeof(Game));
+	game->children = malloc(sizeof(Game_list));
 	game->children->game = NULL;
 	game->children->next = NULL;
 
