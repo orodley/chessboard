@@ -32,6 +32,9 @@ int main(int argc, char *argv[])
 
 	game_root = new_game();
 	current_game = game_root;
+	Board copy;
+	copy_board(&copy, &current_board);
+	current_game->board = &copy;
 
 	GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_title(GTK_WINDOW(window), PROG_NAME);
@@ -57,15 +60,23 @@ int main(int argc, char *argv[])
 	gtk_toolbar_set_style(GTK_TOOLBAR(tool_bar), GTK_TOOLBAR_ICONS);
 	gtk_toolbar_set_show_arrow(GTK_TOOLBAR(tool_bar), false);
 	gtk_widget_set_halign(tool_bar, GTK_ALIGN_CENTER);
-	GtkToolItem *back_button = gtk_tool_button_new_from_stock(GTK_STOCK_GO_BACK);
+	GtkToolItem *back_button_item =
+		gtk_tool_button_new_from_stock(GTK_STOCK_GO_BACK);
+	back_button = GTK_WIDGET(back_button_item);
+	g_signal_connect(G_OBJECT(back_button_item), "clicked",
+			G_CALLBACK(back_button_click_callback), NULL);
+	gtk_widget_set_sensitive(back_button, FALSE);
+	gtk_toolbar_insert(GTK_TOOLBAR(tool_bar), back_button_item, 0);
 
 	GtkWidget *drawing_area = gtk_drawing_area_new();
+	board_display = drawing_area;
 	gint width, height;
 	gtk_window_get_size(GTK_WINDOW(window), &width, &height);
 	gtk_widget_set_size_request(drawing_area, width, height);
 	gtk_widget_add_events(drawing_area,
 			GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
 			GDK_POINTER_MOTION_MASK);
+	// TODO: Don't bother passing &board to callbacks - it's global now anyway
 	g_signal_connect(G_OBJECT(drawing_area), "draw",
 			G_CALLBACK(board_draw_callback), &current_board);
 	g_signal_connect(G_OBJECT(drawing_area), "button-press-event",
@@ -74,7 +85,6 @@ int main(int argc, char *argv[])
 			G_CALLBACK(board_mouse_up_callback), &current_board);
 	g_signal_connect(G_OBJECT(drawing_area), "motion-notify-event",
 			G_CALLBACK(board_mouse_move_callback), NULL);
-	gtk_toolbar_insert(GTK_TOOLBAR(tool_bar), back_button, 0);
 
 	GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
 	gtk_container_add(GTK_CONTAINER(window), box);

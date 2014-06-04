@@ -43,11 +43,13 @@ uint get_square_size(GtkWidget *board)
 Board current_board;
 Game *game_root;
 Game *current_game;
+GtkWidget *board_display;
+GtkWidget *back_button;
 
 
-Square drag_source = NULL_SQUARE;
-uint mouse_x;
-uint mouse_y;
+static Square drag_source = NULL_SQUARE;
+static uint mouse_x;
+static uint mouse_y;
 
 void draw_piece(cairo_t *cr, Piece p, uint size)
 {
@@ -165,6 +167,8 @@ gboolean board_mouse_up_callback(GtkWidget *widget, GdkEvent *event,
 		Board *copy = malloc(sizeof(Board));
 		copy_board(copy, board);
 		current_game = add_child(current_game, m, copy);
+
+		gtk_widget_set_sensitive(back_button, TRUE);
 	}
 
 	drag_source = NULL_SQUARE;
@@ -185,6 +189,22 @@ gboolean board_mouse_move_callback(GtkWidget *widget, GdkEvent *event,
 	if (drag_source != NULL_SQUARE)
 		// TODO: We only need to redraw within square_size around the mouse
 		gtk_widget_queue_draw(widget);
+
+	return FALSE;
+}
+
+gboolean back_button_click_callback(GtkWidget *widget, gpointer user_data)
+{
+	IGNORE(widget);
+	IGNORE(user_data);
+
+	current_game = current_game->parent;
+	current_board = *current_game->board;
+
+	if (current_game->parent == NULL)
+		gtk_widget_set_sensitive(back_button, FALSE);
+
+	gtk_widget_queue_draw(board_display);
 
 	return FALSE;
 }
