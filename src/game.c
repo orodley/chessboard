@@ -55,5 +55,4 @@ void free_game(Game *game)
 
 	free(game->children);
 	free(game->board);
-	free(game);
 }
