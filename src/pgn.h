@@ -22,3 +22,4 @@ typedef struct PGN
 } PGN;
 
 bool read_pgn(PGN *pgn, const char *input_filename, GError **error);
+bool write_pgn(PGN *pgn, FILE *file);
