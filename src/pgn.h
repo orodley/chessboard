@@ -1,7 +1,9 @@
 #include <glib.h>
 #include "game.h"
 
-#define MAX_SYMBOL_LENGTH 255 // PGN spec, section 7
+// PGN spec, section 7
+#define MAX_SYMBOL_LENGTH 255
+#define MAX_STRING_LENGTH 255
 
 typedef enum Result
 {
