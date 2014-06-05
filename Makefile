@@ -10,7 +10,7 @@ OBJS = $(patsubst %.c, %.o, $(wildcard src/*.c))
 
 all: $(NAME)
 
-$(NAME): $(OBJS)
+$(NAME): $(OBJS) main.o
 	$(CC) $(CFLAGS) $^ -o $@
 
 clean:
