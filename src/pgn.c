@@ -56,6 +56,8 @@ static bool read_symbol(GDataInputStream *stream, char *symbol, GError **error)
 			return false;
 	} while (is_symbol_char(c));
 
+	symbol[i++] = '\0';
+
 	return true;
 }
 
@@ -94,6 +96,8 @@ static bool read_string(GDataInputStream *stream, char *string, GError **error)
 		}
 	}
 
+	string[i++] = '\0';
+
 	return true;
 }
 
@@ -121,7 +125,6 @@ bool read_pgn(PGN *pgn, const char *input_filename, GError **error)
 			goto cleanup;
 		}
 		if (c != '[') {
-			ret = false;
 			goto cleanup;
 		}
 

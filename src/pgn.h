@@ -2,8 +2,9 @@
 #include "game.h"
 
 // PGN spec, section 7
-#define MAX_SYMBOL_LENGTH 255
-#define MAX_STRING_LENGTH 255
+// Numbers are one higher to include null-termination
+#define MAX_SYMBOL_LENGTH 256
+#define MAX_STRING_LENGTH 256
 
 typedef enum Result
 {
