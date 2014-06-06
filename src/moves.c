@@ -16,6 +16,8 @@ void perform_move(Board *board, Move move)
 	Piece_type type = PIECE_TYPE(p);
 
 	board->half_move_clock++;
+	if (PLAYER(p) == BLACK)
+		board->move_number++;
 
 	// Check if we're capturing en passant
 	if (type == PAWN && end == board->en_passant)

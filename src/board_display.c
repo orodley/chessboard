@@ -161,7 +161,11 @@ gboolean board_mouse_up_callback(GtkWidget *widget, GdkEvent *event,
 	if (legal_move(board, m, true)) {
 		char notation[MAX_NOTATION_LENGTH];
 		move_notation(board, m, notation);
-		puts(notation);
+
+		if (board->turn == WHITE)
+			printf("%d. %s\n", board->move_number, notation);
+		else
+			printf(" ..%s\n", notation);
 
 		perform_move(board, m);
 		Board *copy = malloc(sizeof(Board));
