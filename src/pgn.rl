@@ -171,6 +171,38 @@ static GArray *tokenize_pgn(char *buf, gsize length)
 	return tokens;
 }
 
+static bool parse_tokens(PGN *pgn, GArray *tokens)
+{
+	// Start with tags
+	pgn->tags = g_hash_table_new(g_str_hash, g_str_equal);
+
+	size_t i = 0;
+	while ((&g_array_index(tokens, Token, i++))->type == L_SQUARE_BRACKET) {
+		Token *tag_name_token = &g_array_index(tokens, Token, i++);
+		if (tag_name_token->type != SYMBOL)
+			return false;
+
+		char *tag_name = tag_name_token->value.string;
+
+		if (g_hash_table_contains(pgn->tags, tag_name))
+			return false;
+
+		Token *tag_value_token = &g_array_index(tokens, Token, i++);
+		if (tag_value_token->type != STRING)
+			return false;
+
+		char *tag_value = tag_value_token->value.string;
+
+		g_hash_table_insert(pgn->tags, tag_name, tag_value);
+
+		Token *close_square_bracket_token = &g_array_index(tokens, Token, i++);
+		if (close_square_bracket_token->type != R_SQUARE_BRACKET)
+			return false;
+	}
+
+	return true;
+}
+
 
 bool read_pgn(PGN *pgn, const char *input_filename, GError **error)
 {
@@ -187,23 +219,7 @@ bool read_pgn(PGN *pgn, const char *input_filename, GError **error)
 	}
 
 	GArray *tokens = tokenize_pgn(buf, length);
-	for (size_t i = 0; i < tokens->len; i++) {
-		Token t = g_array_index(tokens, Token, i);
-		switch (t.type) {
-		case STRING: printf("STRING: %s\n", t.value.string); break;
-		case SYMBOL: printf("SYMBOL: %s\n", t.value.string); break;
-		case NAG: printf("NAG: %s\n", t.value.string); break;
-		case INTEGER: printf("INTEGER: %d\n", t.value.integer); break;
-		case DOT: puts("DOT"); break;
-		case ASTERISK: puts("DOT"); break;
-		case L_SQUARE_BRACKET: puts("L_SQUARE_BRACKET"); break;
-		case R_SQUARE_BRACKET: puts("R_SQUARE_BRACKET"); break;
-		case L_BRACKET: puts("L_BRACKET"); break;
-		case R_BRACKET: puts("R_BRACKET"); break;
-		case L_ANGLE_BRACKET: puts("L_ANGLE_BRACKET"); break;
-		case R_ANGLE_BRACKET: puts("R_ANGLE_BRACKET"); break;
-		}
-	}
+	parse_tokens(pgn, tokens);
 
 	IGNORE(pgn);
 
