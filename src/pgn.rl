@@ -35,6 +35,44 @@ typedef struct Token
 	Token_value value;
 } Token;
 
+char *escape_string(char *str, size_t length)
+{
+	char *out = malloc(length + 1);
+	size_t j = 0;
+	bool escaping = false;
+
+	for (size_t i = 0; i < length; i++) {
+		char c = str[i];
+		switch (c) {
+		case '\\':
+			if (escaping) {
+				out[j++] = '\\';
+				escaping = false;
+			} else {
+				escaping = true;
+			}
+
+			break;
+		case '"':
+			// We should never come across an unescaped quote in a string, as
+			// the tokenizer should have terminated the string in this case.
+			assert(escaping);
+
+			out[j++] = '"';
+			escaping = false;
+			break;
+		default:
+			out[j++] = c;
+			escaping = false;
+			break;
+		}
+	}
+
+	out[j] = '\0';
+
+	return out;
+}
+
 static GArray *tokenize_pgn(char *buf, gsize length)
 {
 	// The initial size (140) is just a rough estimate of the average number of
@@ -54,11 +92,9 @@ static GArray *tokenize_pgn(char *buf, gsize length)
 	%%write init;
 	%%{
 		action add_string {
-			// + 1 for null terminator, - 2 for quotes
-			size_t length = (te - ts + 1) - 2; 
-			char *token = malloc(length); 
-			strncpy(token, ts + 1, length - 1);
-			token[length - 1] = '\0';
+			// - 2 for quotes
+			size_t length = te - ts - 2;
+			char *token = escape_string(ts + 1, length);
 
 			Token t = { STRING, { token } };
 
@@ -107,8 +143,7 @@ static GArray *tokenize_pgn(char *buf, gsize length)
 		# cannot contain the '/' character. This seems like a contradiction, so
 		# to work around it we allow '/'s in symbols.
 		symbol = alnum (alnum | [_+#=:\-/])*;
-		# TODO: Escaping in strings. This should probably be done in a second stage.
-		string = '"' (print - '"')* '"';
+		string = '"' (('\\' print) | (print - '\\"'))* '"';
 		integer = digit+;
 		nag = '$' digit+;
 
