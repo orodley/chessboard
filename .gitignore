@@ -1,3 +1,4 @@
+src/pgn.c
 *.o
 
 chessboard
