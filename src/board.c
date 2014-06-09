@@ -279,8 +279,8 @@ bool checkmate(Board *board, Player p)
 		int x_direction = ax == 0 ? 0 : dx / ax;
 		int y_direction = ay == 0 ? 0 : dy / ay;
 
-		int file = SQUARE_FILE(king_location) + x_direction;
-		int rank = SQUARE_RANK(king_location) + y_direction;
+		uint file = SQUARE_FILE(king_location) + x_direction;
+		uint rank = SQUARE_RANK(king_location) + y_direction;
 		while (!(file == SQUARE_FILE(attacker) &&
 					rank == SQUARE_RANK(attacker))) {
 			Square blocker = find_piece_looking_at(board, SQUARE(file, rank), p);

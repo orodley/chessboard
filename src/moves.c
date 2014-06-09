@@ -105,8 +105,8 @@ bool legal_move(Board *board, Move move, bool check_for_check)
 
 	// Pieces other than knights are blocked by intervening pieces
 	if (type != KNIGHT) {
-		int file = SQUARE_FILE(start) + x_direction;
-		int rank = SQUARE_RANK(start) + y_direction;
+		uint file = SQUARE_FILE(start) + x_direction;
+		uint rank = SQUARE_RANK(start) + y_direction;
 		while (!(file == SQUARE_FILE(end) && rank == SQUARE_RANK(end))) {
 			if (PIECE_AT(board, file, rank) != EMPTY)
 				return false;

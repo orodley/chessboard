@@ -5,7 +5,7 @@
 // significant bytes, and the end square in the two least significant
 // bytes. Each pair of bytes has the file in the most significant byte, and
 // the rank in the least significant byte.
-typedef uint_least32_t Move;
+typedef uint_fast32_t Move;
 #define MOVE(start, end) ((Move)(((start) << 16) | (end)))
 #define START_SQUARE(m)  ((m) >> 16)
 #define END_SQUARE(m)    ((m) & 0xFFFF)
@@ -14,7 +14,9 @@ typedef uint_least32_t Move;
 
 
 #define FILE_CHAR(file) ('a' + (file))
+#define CHAR_FILE(c)    ((c) - 'a')
 #define RANK_CHAR(rank) ('1' + (rank))
+#define CHAR_RANK(c)    ((c) - '1')
 
 
 void perform_move(Board *board, Move move);

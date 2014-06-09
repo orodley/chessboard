@@ -8,7 +8,7 @@
 #define BOARD_SIZE 8
 #define PLAYERS 2
 
-typedef uint_least16_t Square;
+typedef uint_fast16_t Square;
 #define SQUARE(file, rank) (((file) << 8) | (rank))
 #define SQUARE_FILE(s) ((s) >> 8)
 #define SQUARE_RANK(s) ((s) & 0xF)
