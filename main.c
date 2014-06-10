@@ -60,6 +60,15 @@ int main(int argc, char *argv[])
 	gtk_toolbar_set_style(GTK_TOOLBAR(tool_bar), GTK_TOOLBAR_ICONS);
 	gtk_toolbar_set_show_arrow(GTK_TOOLBAR(tool_bar), false);
 	gtk_widget_set_halign(tool_bar, GTK_ALIGN_CENTER);
+
+	GtkToolItem *forward_button_item =
+		gtk_tool_button_new_from_stock(GTK_STOCK_GO_FORWARD);
+	forward_button = GTK_WIDGET(forward_button_item);
+	g_signal_connect(G_OBJECT(forward_button_item), "clicked",
+			G_CALLBACK(forward_button_click_callback), NULL);
+	gtk_widget_set_sensitive(forward_button, FALSE);
+	gtk_toolbar_insert(GTK_TOOLBAR(tool_bar), forward_button_item, 0);
+
 	GtkToolItem *back_button_item =
 		gtk_tool_button_new_from_stock(GTK_STOCK_GO_BACK);
 	back_button = GTK_WIDGET(back_button_item);

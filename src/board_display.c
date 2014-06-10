@@ -40,11 +40,13 @@ uint get_square_size(GtkWidget *board)
 		max_square_height;
 }
 
+// TODO: should this be a pointer?
 Board current_board;
 Game *game_root;
 Game *current_game;
 GtkWidget *board_display;
 GtkWidget *back_button;
+GtkWidget *forward_button;
 
 
 static Square drag_source = NULL_SQUARE;
@@ -173,6 +175,7 @@ gboolean board_mouse_up_callback(GtkWidget *widget, GdkEvent *event,
 		current_game = add_child(current_game, m, copy);
 
 		gtk_widget_set_sensitive(back_button, TRUE);
+		gtk_widget_set_sensitive(forward_button, has_children(current_game));
 	}
 
 	drag_source = NULL_SQUARE;
@@ -205,8 +208,24 @@ gboolean back_button_click_callback(GtkWidget *widget, gpointer user_data)
 	current_game = current_game->parent;
 	current_board = *current_game->board;
 
-	if (current_game->parent == NULL)
-		gtk_widget_set_sensitive(back_button, FALSE);
+	gtk_widget_set_sensitive(back_button, current_game->parent != NULL);
+	gtk_widget_set_sensitive(forward_button, TRUE);
+
+	gtk_widget_queue_draw(board_display);
+
+	return FALSE;
+}
+
+gboolean forward_button_click_callback(GtkWidget *widget, gpointer user_data)
+{
+	IGNORE(widget);
+	IGNORE(user_data);
+
+	current_game = first_child(current_game);
+	current_board = *current_game->board;
+
+	gtk_widget_set_sensitive(back_button, TRUE);
+	gtk_widget_set_sensitive(forward_button, has_children(current_game));
 
 	gtk_widget_queue_draw(board_display);
 

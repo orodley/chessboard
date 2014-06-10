@@ -336,6 +336,7 @@ static bool parse_tokens(PGN *pgn, GArray *tokens)
 	// TODO: Use value in start board tag if present.
 	from_fen(game->board, start_board_fen);
 
+	// TODO: variations, NAG
 	while (i < tokens->len) {
 		Token *t = &g_array_index(tokens, Token, i++);
 		if (t->type == INTEGER) {
@@ -423,6 +424,8 @@ bool write_pgn(PGN *pgn, FILE *file)
 		
 		game = first_child(game);
 	} while (game != NULL);
+
+	putc('\n', file);
 
 	return true;
 }

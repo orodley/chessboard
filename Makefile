@@ -27,7 +27,7 @@ clean:
 test: test/pgn
 
 test/pgn: test/pgn/run-tests.sh test/pgn/test-pgn
-	test/pgn/run-tests.sh
+	@test/pgn/run-tests.sh
 
 test/pgn/test-pgn: test/pgn/test-pgn.c $(OBJS)
 	$(CC) $(CFLAGS) $^ -o $@

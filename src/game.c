@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include "board.h"
@@ -38,7 +39,7 @@ Game *add_child(Game *game, Move move, Board *board)
 		if (children->game == NULL) {
 			children->game = new_node;
 		} else {
-			Game_list *list = malloc(sizeof(Game_list));
+			Game_list *list = malloc(sizeof *list);
 			list->game = new_node;
 			children->next = list;
 		}
@@ -50,6 +51,11 @@ Game *add_child(Game *game, Move move, Board *board)
 Game *first_child(Game *game)
 {
 	return game->children->game;
+}
+
+bool has_children(Game *game)
+{
+	return game->children != NULL && game->children->game != NULL;
 }
 
 void free_game(Game *game)

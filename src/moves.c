@@ -241,6 +241,7 @@ void move_notation(Board *board, Move move, char *str)
 	Piece_type type = PIECE_TYPE(p);
 
 	// Castling
+	// TODO: Castling can cause a check or a mate - needs +/#
 	if (type == KING && abs(SQUARE_FILE(start) - SQUARE_FILE(end)) > 1) {
 		if (SQUARE_FILE(end) == 6)
 			strcpy(str, "O-O");
