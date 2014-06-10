@@ -72,19 +72,19 @@ void draw_piece(cairo_t *cr, Piece p, uint size)
 	cairo_scale(cr, 1 / scale, 1 / scale);
 }
 
-// TODO: the non-board bits on the edge of the screen look weird as they are
-// the same color as the dark squares.
 gboolean board_draw_callback(GtkWidget *widget, cairo_t *cr, gpointer data)
 {
 	IGNORE(data);
 
-	// Fill the background
-	// TODO: Once we're setting the size of the display area to always be
-	// square we shouldn't need to do this
-	cairo_set_source_rgb(cr, 1, 1, 1);
-	cairo_paint(cr);
-
+	// Unless the width/height of the drawing area is exactly a multiple of 8,
+	// there's going to be some leftover space. We want to have the board
+	// completely centered, so we pad by half the leftover space.
+	// We rely on the widget being perfectly square in these calculations.
 	uint square_size = get_square_size(widget);
+	uint leftover_space =
+		gtk_widget_get_allocated_width(widget) - square_size * BOARD_SIZE;
+	uint padding = leftover_space / 2;
+	cairo_translate(cr, padding, padding);
 
 	// Color light squares one-by-one
 	cairo_set_line_width(cr, 0);
@@ -201,7 +201,6 @@ gboolean board_mouse_move_callback(GtkWidget *widget, GdkEvent *event,
 	mouse_y = e->y;
 
 	if (drag_source != NULL_SQUARE)
-		// TODO: We only need to redraw within square_size around the mouse
 		gtk_widget_queue_draw(widget);
 
 	return FALSE;

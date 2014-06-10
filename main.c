@@ -99,16 +99,19 @@ int main(int argc, char *argv[])
 	g_signal_connect(G_OBJECT(drawing_area), "motion-notify-event",
 			G_CALLBACK(board_mouse_move_callback), NULL);
 
+	GtkWidget *aspect_frame = gtk_aspect_frame_new(NULL, 0.5, 0.5, 1, FALSE);
+
 	GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
 	gtk_container_add(GTK_CONTAINER(window), box);
 
 	gtk_container_add(GTK_CONTAINER(box), menu_bar);
 	gtk_container_add(GTK_CONTAINER(box), tool_bar);
-	gtk_container_add(GTK_CONTAINER(box), drawing_area);
+	gtk_container_add(GTK_CONTAINER(aspect_frame), drawing_area);
+	gtk_container_add(GTK_CONTAINER(box), aspect_frame);
 
 	gtk_box_set_child_packing(GTK_BOX(box), tool_bar,
 			FALSE, FALSE, 0, GTK_PACK_START);
-	gtk_box_set_child_packing(GTK_BOX(box), drawing_area,
+	gtk_box_set_child_packing(GTK_BOX(box), aspect_frame,
 			TRUE, TRUE, 0, GTK_PACK_START);
 	gtk_widget_show_all(window);
 
