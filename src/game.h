@@ -26,6 +26,7 @@ typedef struct Game
 
 Game *new_game();
 Game *add_child(Game *game, Move move, Board *board);
+Game *first_child(Game *game);
 void free_game(Game *game);
 
 #endif // include guard

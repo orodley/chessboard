@@ -230,7 +230,7 @@ Square ambiguous_piece(Board *board, Move move)
 	return NULL_SQUARE;
 }
 
-// str should have space for at least 7 (MAX_ALGEBRAIC_LENGTH) characters, to
+// str should have space for at least 7 (MAX_NOTATION_LENGTH) characters, to
 // be able to fit the longest of moves. e.g.: Raxd1+\0
 void move_notation(Board *board, Move move, char *str)
 {
@@ -276,8 +276,6 @@ void move_notation(Board *board, Move move, char *str)
 	// Add the target square
 	str[i++] = FILE_CHAR(SQUARE_FILE(end));
 	str[i++] = RANK_CHAR(SQUARE_RANK(end));
-
-	// TODO: macro for the other player thing
 
 	// Add a '#' if its mate
 	if (gives_mate(board, move, OTHER_PLAYER(PLAYER(p))))
