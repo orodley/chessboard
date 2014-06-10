@@ -25,7 +25,10 @@ int main(int argc, char *argv[])
 		fen = start_board_fen;
 	}
 
-	if (!from_fen(&current_board, fen)) {
+	Board board;
+	current_board = &board;
+
+	if (!from_fen(current_board, fen)) {
 		printf("Couldn't parse given FEN string:\n%s\n", fen);
 		return 1;
 	}
@@ -33,7 +36,7 @@ int main(int argc, char *argv[])
 	game_root = new_game();
 	current_game = game_root;
 	Board copy;
-	copy_board(&copy, &current_board);
+	copy_board(&copy, current_board);
 	current_game->board = &copy;
 
 	GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -87,13 +90,12 @@ int main(int argc, char *argv[])
 	gtk_widget_add_events(drawing_area,
 			GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
 			GDK_POINTER_MOTION_MASK);
-	// TODO: Don't bother passing &board to callbacks - it's global now anyway
 	g_signal_connect(G_OBJECT(drawing_area), "draw",
-			G_CALLBACK(board_draw_callback), &current_board);
+			G_CALLBACK(board_draw_callback), NULL);
 	g_signal_connect(G_OBJECT(drawing_area), "button-press-event",
-			G_CALLBACK(board_mouse_down_callback), &current_board);
+			G_CALLBACK(board_mouse_down_callback), NULL);
 	g_signal_connect(G_OBJECT(drawing_area), "button-release-event",
-			G_CALLBACK(board_mouse_up_callback), &current_board);
+			G_CALLBACK(board_mouse_up_callback), NULL);
 	g_signal_connect(G_OBJECT(drawing_area), "motion-notify-event",
 			G_CALLBACK(board_mouse_move_callback), NULL);
 

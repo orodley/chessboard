@@ -41,8 +41,7 @@ uint get_square_size(GtkWidget *board)
 		max_square_height;
 }
 
-// TODO: should this be a pointer?
-Board current_board;
+Board *current_board;
 Game *game_root;
 Game *current_game;
 GtkWidget *board_display;
@@ -77,7 +76,7 @@ void draw_piece(cairo_t *cr, Piece p, uint size)
 // the same color as the dark squares.
 gboolean board_draw_callback(GtkWidget *widget, cairo_t *cr, gpointer data)
 {
-	Board *board = (Board *)data;
+	IGNORE(data);
 
 	// Fill the background
 	// TODO: Once we're setting the size of the display area to always be
@@ -106,7 +105,7 @@ gboolean board_draw_callback(GtkWidget *widget, cairo_t *cr, gpointer data)
 
 			// Draw the piece (if any)
 			Piece p;
-			if ((p = PIECE_AT(board, file, rank)) != EMPTY &&
+			if ((p = PIECE_AT(current_board, file, rank)) != EMPTY &&
 					(drag_source == NULL_SQUARE || SQUARE(file, rank) != drag_source)) {
 				draw_piece(cr, p, square_size);
 			}
@@ -120,7 +119,7 @@ gboolean board_draw_callback(GtkWidget *widget, cairo_t *cr, gpointer data)
 	if (drag_source != NULL_SQUARE) {
 		cairo_identity_matrix(cr);
 		cairo_translate(cr, mouse_x - square_size / 2, mouse_y - square_size / 2);
-		draw_piece(cr, PIECE_AT_SQUARE(board, drag_source), square_size);
+		draw_piece(cr, PIECE_AT_SQUARE(current_board, drag_source), square_size);
 	}
 
 	return FALSE;
@@ -138,14 +137,14 @@ Square board_coords_to_square(GtkWidget *drawing_area, uint x, uint y)
 gboolean board_mouse_down_callback(GtkWidget *widget, GdkEvent *event,
 		gpointer user_data)
 {
+	IGNORE(user_data);
 	GdkEventButton *e = (GdkEventButton *)event;
-	Board *board = (Board *)user_data;
 
 	if (e->button != 1)
 		return FALSE;
 
 	Square clicked_square = board_coords_to_square(widget, e->x, e->y);
-	if (PIECE_AT_SQUARE(board, clicked_square) != EMPTY) {
+	if (PIECE_AT_SQUARE(current_board, clicked_square) != EMPTY) {
 		drag_source = clicked_square;
 	}
 
@@ -161,26 +160,26 @@ void set_button_sensitivity()
 gboolean board_mouse_up_callback(GtkWidget *widget, GdkEvent *event,
 		gpointer user_data)
 {
+	IGNORE(user_data);
 	GdkEventButton *e = (GdkEventButton *)event;
-	Board *board = (Board *)user_data;
 
 	if (e->button != 1 || drag_source == NULL_SQUARE)
 		return FALSE;
 
 	Square drag_target = board_coords_to_square(widget, e->x, e->y);
 	Move m = MOVE(drag_source, drag_target);
-	if (legal_move(board, m, true)) {
+	if (legal_move(current_board, m, true)) {
 		char notation[MAX_NOTATION_LENGTH];
-		move_notation(board, m, notation);
+		move_notation(current_board, m, notation);
 
-		if (board->turn == WHITE)
-			printf("%d. %s\n", board->move_number, notation);
+		if (current_board->turn == WHITE)
+			printf("%d. %s\n", current_board->move_number, notation);
 		else
 			printf(" ..%s\n", notation);
 
-		perform_move(board, m);
-		Board *copy = malloc(sizeof(Board));
-		copy_board(copy, board);
+		perform_move(current_board, m);
+		Board *copy = malloc(sizeof *copy);
+		copy_board(copy, current_board);
 		current_game = add_child(current_game, m, copy);
 
 		set_button_sensitivity();
@@ -214,7 +213,7 @@ gboolean back_button_click_callback(GtkWidget *widget, gpointer user_data)
 	IGNORE(user_data);
 
 	current_game = current_game->parent;
-	current_board = *current_game->board;
+	current_board = current_game->board;
 
 	set_button_sensitivity();
 
@@ -229,7 +228,7 @@ gboolean forward_button_click_callback(GtkWidget *widget, gpointer user_data)
 	IGNORE(user_data);
 
 	current_game = first_child(current_game);
-	current_board = *current_game->board;
+	current_board = current_game->board;
 
 	set_button_sensitivity();
 
@@ -278,7 +277,7 @@ void open_pgn_callback(GtkMenuItem *menu_item, gpointer user_data)
 
 
 		current_game = pgn.game;
-		current_board = *current_game->board;
+		current_board = current_game->board;
 
 		gtk_widget_queue_draw(board_display);
 
