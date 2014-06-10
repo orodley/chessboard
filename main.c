@@ -49,7 +49,9 @@ int main(int argc, char *argv[])
 	GtkWidget *file_menu = gtk_menu_new();
 	GtkWidget *file_item = gtk_menu_item_new_with_label("File");
 	gtk_menu_item_set_submenu(GTK_MENU_ITEM(file_item), file_menu);
-	GtkWidget *open_item = gtk_menu_item_new_with_label("Open");
+	GtkWidget *open_item = gtk_menu_item_new_with_label("Open PGN...");
+	g_signal_connect(G_OBJECT(open_item), "activate",
+			G_CALLBACK(open_pgn_callback), window);
 	GtkWidget *save_item = gtk_menu_item_new_with_label("Save");
 	gtk_menu_shell_append(GTK_MENU_SHELL(file_menu), open_item);
 	gtk_menu_shell_append(GTK_MENU_SHELL(file_menu), save_item);

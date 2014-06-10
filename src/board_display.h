@@ -20,6 +20,7 @@ gboolean board_mouse_move_callback(GtkWidget *widget, GdkEvent *event,
 
 gboolean back_button_click_callback(GtkWidget *widget, gpointer user_data);
 gboolean forward_button_click_callback(GtkWidget *widget, gpointer user_data);
+void open_pgn_callback(GtkMenuItem *menu_item, gpointer user_data);
 
 extern Board current_board;
 extern Game *game_root;

@@ -8,6 +8,7 @@
 #include "board_display.h"
 #include "misc.h"
 #include "moves.h"
+#include "pgn.h"
 
 RsvgHandle *piece_images[2][6];
 
@@ -79,6 +80,8 @@ gboolean board_draw_callback(GtkWidget *widget, cairo_t *cr, gpointer data)
 	Board *board = (Board *)data;
 
 	// Fill the background
+	// TODO: Once we're setting the size of the display area to always be
+	// square we shouldn't need to do this
 	cairo_set_source_rgb(cr, 1, 1, 1);
 	cairo_paint(cr);
 
@@ -149,6 +152,12 @@ gboolean board_mouse_down_callback(GtkWidget *widget, GdkEvent *event,
 	return FALSE;
 }
 
+void set_button_sensitivity()
+{
+	gtk_widget_set_sensitive(back_button, current_game->parent != NULL);
+	gtk_widget_set_sensitive(forward_button, has_children(current_game));
+}
+
 gboolean board_mouse_up_callback(GtkWidget *widget, GdkEvent *event,
 		gpointer user_data)
 {
@@ -174,8 +183,7 @@ gboolean board_mouse_up_callback(GtkWidget *widget, GdkEvent *event,
 		copy_board(copy, board);
 		current_game = add_child(current_game, m, copy);
 
-		gtk_widget_set_sensitive(back_button, TRUE);
-		gtk_widget_set_sensitive(forward_button, has_children(current_game));
+		set_button_sensitivity();
 	}
 
 	drag_source = NULL_SQUARE;
@@ -208,8 +216,7 @@ gboolean back_button_click_callback(GtkWidget *widget, gpointer user_data)
 	current_game = current_game->parent;
 	current_board = *current_game->board;
 
-	gtk_widget_set_sensitive(back_button, current_game->parent != NULL);
-	gtk_widget_set_sensitive(forward_button, TRUE);
+	set_button_sensitivity();
 
 	gtk_widget_queue_draw(board_display);
 
@@ -224,10 +231,59 @@ gboolean forward_button_click_callback(GtkWidget *widget, gpointer user_data)
 	current_game = first_child(current_game);
 	current_board = *current_game->board;
 
-	gtk_widget_set_sensitive(back_button, TRUE);
-	gtk_widget_set_sensitive(forward_button, has_children(current_game));
+	set_button_sensitivity();
 
 	gtk_widget_queue_draw(board_display);
 
 	return FALSE;
+}
+
+void open_pgn_callback(GtkMenuItem *menu_item, gpointer user_data)
+{
+	IGNORE(menu_item);
+	GtkWindow *parent = (GtkWindow *)user_data;
+
+	GtkWidget *dialog = gtk_file_chooser_dialog_new("Open PGN", parent,
+			GTK_FILE_CHOOSER_ACTION_OPEN,
+			"Cancel", GTK_RESPONSE_CANCEL,
+			"Open", GTK_RESPONSE_ACCEPT,
+			NULL);
+	GtkFileChooser *chooser = GTK_FILE_CHOOSER(dialog);
+	gtk_file_chooser_set_local_only(chooser, TRUE);
+
+	GtkFileFilter *just_pgns = gtk_file_filter_new();
+	gtk_file_filter_set_name(just_pgns, "PGN files");
+	gtk_file_filter_add_pattern(just_pgns, "*.pgn");
+	gtk_file_chooser_add_filter(chooser, just_pgns);
+
+	GtkFileFilter *all_files = gtk_file_filter_new();
+	gtk_file_filter_set_name(all_files, "All files");
+	gtk_file_filter_add_pattern(all_files, "*");
+	gtk_file_chooser_add_filter(chooser, all_files);
+
+	int result = gtk_dialog_run(GTK_DIALOG(dialog));
+	if (result == GTK_RESPONSE_ACCEPT) {
+		char *filename = gtk_file_chooser_get_filename(chooser);
+		PGN pgn;
+		GError *error = NULL;
+		bool success = read_pgn(&pgn, filename, &error);
+
+		g_free(filename);
+
+		if (!success) {
+			// TODO: Display an error dialog
+			puts("Failed to read the PGN");
+			return;
+		}
+
+
+		current_game = pgn.game;
+		current_board = *current_game->board;
+
+		gtk_widget_queue_draw(board_display);
+
+		set_button_sensitivity();
+	}
+
+	gtk_widget_destroy(dialog);
 }
