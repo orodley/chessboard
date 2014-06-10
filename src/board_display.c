@@ -41,8 +41,9 @@ uint get_square_size(GtkWidget *board)
 		max_square_height;
 }
 
+// TODO: current_board isn't really necessary, as it should be the same as
+// current_game->board
 Board *current_board;
-Game *game_root;
 Game *current_game;
 GtkWidget *board_display;
 GtkWidget *back_button;
@@ -284,4 +285,17 @@ void open_pgn_callback(GtkMenuItem *menu_item, gpointer user_data)
 	}
 
 	gtk_widget_destroy(dialog);
+}
+
+gboolean last_button_click_callback(GtkWidget *widget, gpointer user_data)
+{
+	IGNORE(widget);
+	IGNORE(user_data);
+
+	current_game = last_node(current_game);
+	current_board = current_game->board;
+	set_button_sensitivity();
+	gtk_widget_queue_draw(board_display);
+
+	return FALSE;
 }

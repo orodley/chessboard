@@ -53,6 +53,14 @@ Game *first_child(Game *game)
 	return game->children->game;
 }
 
+Game *last_node(Game *game)
+{
+	while (game->children->game != NULL)
+		game = game->children->game;
+
+	return game;
+}
+
 bool has_children(Game *game)
 {
 	return game->children != NULL && game->children->game != NULL;

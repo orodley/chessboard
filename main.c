@@ -33,8 +33,7 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	game_root = new_game();
-	current_game = game_root;
+	current_game = new_game();
 	Board copy;
 	copy_board(&copy, current_board);
 	current_game->board = &copy;
@@ -65,6 +64,12 @@ int main(int argc, char *argv[])
 	gtk_toolbar_set_style(GTK_TOOLBAR(tool_bar), GTK_TOOLBAR_ICONS);
 	gtk_toolbar_set_show_arrow(GTK_TOOLBAR(tool_bar), false);
 	gtk_widget_set_halign(tool_bar, GTK_ALIGN_CENTER);
+
+	GtkToolItem *last_button_item =
+		gtk_tool_button_new_from_stock(GTK_STOCK_GOTO_LAST);
+	g_signal_connect(G_OBJECT(last_button_item), "clicked",
+			G_CALLBACK(last_button_click_callback), NULL);
+	gtk_toolbar_insert(GTK_TOOLBAR(tool_bar), last_button_item, 0);
 
 	GtkToolItem *forward_button_item =
 		gtk_tool_button_new_from_stock(GTK_STOCK_GO_FORWARD);
