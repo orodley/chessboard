@@ -368,6 +368,17 @@ static bool parse_tokens(PGN *pgn, GArray *tokens)
 	return true;
 }
 
+void free_tokens(GArray *tokens)
+{
+	for (size_t i = 0; i < tokens->len; i++) {
+		Token *t = &g_array_index(tokens, Token, i);
+		if (t->type == SYMBOL || t->type == STRING || t->type == NAG)
+			free(t->value.string);
+	}
+
+	g_array_free(tokens, TRUE);
+}
+
 
 bool read_pgn(PGN *pgn, const char *input_filename, GError **error)
 {
@@ -384,9 +395,8 @@ bool read_pgn(PGN *pgn, const char *input_filename, GError **error)
 	}
 
 	GArray *tokens = tokenize_pgn(buf, length);
-	parse_tokens(pgn, tokens);
-
-	IGNORE(pgn);
+	ret = parse_tokens(pgn, tokens);
+	free_tokens(tokens);
 
 cleanup:
 	g_free(buf);
