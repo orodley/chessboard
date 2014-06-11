@@ -22,8 +22,6 @@ Game *new_game()
 
 Game *add_child(Game *game, Move move, Board *board)
 {
-	game->move = move;
-
 	Game_list *children = game->children;
 	while (children->game != NULL && children->next != NULL &&
 			children->game->move != move)
@@ -33,6 +31,7 @@ Game *add_child(Game *game, Move move, Board *board)
 		return children->game;
 	} else {
 		Game *new_node = new_game();
+		new_node->move = move;
 		new_node->board = board;
 		new_node->parent = game;
 
