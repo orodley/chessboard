@@ -421,7 +421,7 @@ bool write_pgn(PGN *pgn, FILE *file)
 	// TODO: sorting
 	g_hash_table_foreach(pgn->tags, write_tag, (void *)file);
 	
-	Game *game = pgn->game->children->game;
+	Game *game = pgn->game->children;
 	do {
 		if (game->board->turn == WHITE)
 			fprintf(file, game->board->move_number == 1 ?

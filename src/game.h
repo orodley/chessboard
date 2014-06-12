@@ -10,18 +10,14 @@
 
 struct Game;
 
-typedef struct Game_list
-{
-	struct Game      *game;
-	struct Game_list *next;
-} Game_list;
-
 typedef struct Game
 {
 	Move move;
 	Board *board;
-	struct Game_list *children;
+
 	struct Game *parent;
+	struct Game *children;
+	struct Game *sibling;
 } Game;
 
 Game *new_game();
