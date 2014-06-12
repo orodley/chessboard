@@ -43,6 +43,8 @@ int main(int argc, char *argv[])
 	gtk_window_set_default_size(GTK_WINDOW(window),
 			DEFAULT_SQUARE_SIZE * BOARD_SIZE,
 			DEFAULT_SQUARE_SIZE * BOARD_SIZE);
+	GtkAccelGroup *accel_group = gtk_accel_group_new();
+	gtk_window_add_accel_group(GTK_WINDOW(window), accel_group);
 	g_signal_connect(G_OBJECT(window), "destroy",
 			G_CALLBACK(gtk_main_quit), NULL);
 
@@ -54,6 +56,8 @@ int main(int argc, char *argv[])
 	GtkWidget *open_item = gtk_menu_item_new_with_label("Open PGN...");
 	g_signal_connect(G_OBJECT(open_item), "activate",
 			G_CALLBACK(open_pgn_callback), window);
+	gtk_widget_add_accelerator(open_item, "activate", accel_group,
+			GDK_KEY_o, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
 	GtkWidget *save_item = gtk_menu_item_new_with_label("Save");
 	gtk_menu_shell_append(GTK_MENU_SHELL(file_menu), open_item);
 	gtk_menu_shell_append(GTK_MENU_SHELL(file_menu), save_item);
