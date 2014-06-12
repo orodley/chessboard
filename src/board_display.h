@@ -10,6 +10,9 @@
 #define DEFAULT_SQUARE_SIZE 50
 
 void load_svgs(char *dir, GError **err);
+
+void set_button_sensitivity();
+
 gboolean board_draw_callback(GtkWidget *widget, cairo_t *cr, gpointer data);
 gboolean board_mouse_down_callback(GtkWidget *widget, GdkEvent *event,
 		gpointer user_data);

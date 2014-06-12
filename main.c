@@ -1,9 +1,11 @@
+#include <assert.h>
 #include <gtk/gtk.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "board.h"
 #include "board_display.h"
 #include "game.h"
+#include "pgn.h"
 
 char *piece_svgs = "pieces/merida/";
 
@@ -18,20 +20,29 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	char *fen;
 	if (argc > 1) {
-		fen = argv[1];
-		puts(fen);
+		// If we get any args, we take them to be a PGN file to open
+		char *pgn_filename = argv[1];
+		PGN pgn;
+
+		if (!read_pgn(&pgn, pgn_filename, &err)) {
+			fprintf(stderr, "Failed to load PGN file '%s'", pgn_filename);
+			if (err == NULL)
+				putc('\n', stderr);
+			else
+				fprintf(stderr, ":\n%s", err->message);
+
+			return 1;
+		}
+
+		current_game = pgn.game;
 	} else {
-		fen = start_board_fen;
-	}
+		current_game = new_game();
+		current_game->board = malloc(sizeof(Board));
 
-	current_game = new_game();
-	current_game->board = malloc(sizeof(Board));
-
-	if (!from_fen(current_game->board, fen)) {
-		printf("Couldn't parse given FEN string:\n%s\n", fen);
-		return 1;
+		bool success = from_fen(current_game->board, start_board_fen);
+		// This is a fixed string, it should never fail to be parsed
+		assert(success);
 	}
 
 	GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -119,6 +130,9 @@ int main(int argc, char *argv[])
 	gtk_box_set_child_packing(GTK_BOX(box), aspect_frame,
 			TRUE, TRUE, 0, GTK_PACK_START);
 	gtk_widget_show_all(window);
+
+	// If we loaded a PGN file, we need to enable the forward button
+	set_button_sensitivity();
 
 	gtk_main();
 
