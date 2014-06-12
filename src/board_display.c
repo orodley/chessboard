@@ -41,9 +41,6 @@ uint get_square_size(GtkWidget *board)
 		max_square_height;
 }
 
-// TODO: current_board isn't really necessary, as it should be the same as
-// current_game->board
-Board *current_board;
 Game *current_game;
 GtkWidget *board_display;
 GtkWidget *back_button;
@@ -106,7 +103,7 @@ gboolean board_draw_callback(GtkWidget *widget, cairo_t *cr, gpointer data)
 
 			// Draw the piece (if any)
 			Piece p;
-			if ((p = PIECE_AT(current_board, file, rank)) != EMPTY &&
+			if ((p = PIECE_AT(current_game->board, file, rank)) != EMPTY &&
 					(drag_source == NULL_SQUARE || SQUARE(file, rank) != drag_source)) {
 				draw_piece(cr, p, square_size);
 			}
@@ -120,7 +117,7 @@ gboolean board_draw_callback(GtkWidget *widget, cairo_t *cr, gpointer data)
 	if (drag_source != NULL_SQUARE) {
 		cairo_identity_matrix(cr);
 		cairo_translate(cr, mouse_x - square_size / 2, mouse_y - square_size / 2);
-		draw_piece(cr, PIECE_AT_SQUARE(current_board, drag_source), square_size);
+		draw_piece(cr, PIECE_AT_SQUARE(current_game->board, drag_source), square_size);
 	}
 
 	return FALSE;
@@ -145,7 +142,7 @@ gboolean board_mouse_down_callback(GtkWidget *widget, GdkEvent *event,
 		return FALSE;
 
 	Square clicked_square = board_coords_to_square(widget, e->x, e->y);
-	if (PIECE_AT_SQUARE(current_board, clicked_square) != EMPTY) {
+	if (PIECE_AT_SQUARE(current_game->board, clicked_square) != EMPTY) {
 		drag_source = clicked_square;
 	}
 
@@ -169,18 +166,18 @@ gboolean board_mouse_up_callback(GtkWidget *widget, GdkEvent *event,
 
 	Square drag_target = board_coords_to_square(widget, e->x, e->y);
 	Move m = MOVE(drag_source, drag_target);
-	if (legal_move(current_board, m, true)) {
+	if (legal_move(current_game->board, m, true)) {
 		char notation[MAX_NOTATION_LENGTH];
-		move_notation(current_board, m, notation);
+		move_notation(current_game->board, m, notation);
 
-		if (current_board->turn == WHITE)
-			printf("%d. %s\n", current_board->move_number, notation);
+		if (current_game->board->turn == WHITE)
+			printf("%d. %s\n", current_game->board->move_number, notation);
 		else
 			printf(" ..%s\n", notation);
 
-		perform_move(current_board, m);
 		Board *copy = malloc(sizeof *copy);
-		copy_board(copy, current_board);
+		copy_board(copy, current_game->board);
+		perform_move(copy, m);
 		current_game = add_child(current_game, m, copy);
 
 		set_button_sensitivity();
@@ -213,7 +210,6 @@ gboolean back_button_click_callback(GtkWidget *widget, gpointer user_data)
 	IGNORE(user_data);
 
 	current_game = current_game->parent;
-	current_board = current_game->board;
 
 	set_button_sensitivity();
 
@@ -228,7 +224,6 @@ gboolean forward_button_click_callback(GtkWidget *widget, gpointer user_data)
 	IGNORE(user_data);
 
 	current_game = first_child(current_game);
-	current_board = current_game->board;
 
 	set_button_sensitivity();
 
@@ -275,9 +270,7 @@ void open_pgn_callback(GtkMenuItem *menu_item, gpointer user_data)
 			return;
 		}
 
-
 		current_game = pgn.game;
-		current_board = current_game->board;
 
 		gtk_widget_queue_draw(board_display);
 
@@ -293,7 +286,6 @@ gboolean last_button_click_callback(GtkWidget *widget, gpointer user_data)
 	IGNORE(user_data);
 
 	current_game = last_node(current_game);
-	current_board = current_game->board;
 	set_button_sensitivity();
 	gtk_widget_queue_draw(board_display);
 

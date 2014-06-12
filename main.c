@@ -1,5 +1,6 @@
 #include <gtk/gtk.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "board.h"
 #include "board_display.h"
 #include "game.h"
@@ -25,18 +26,13 @@ int main(int argc, char *argv[])
 		fen = start_board_fen;
 	}
 
-	Board board;
-	current_board = &board;
+	current_game = new_game();
+	current_game->board = malloc(sizeof(Board));
 
-	if (!from_fen(current_board, fen)) {
+	if (!from_fen(current_game->board, fen)) {
 		printf("Couldn't parse given FEN string:\n%s\n", fen);
 		return 1;
 	}
-
-	current_game = new_game();
-	Board copy;
-	copy_board(&copy, current_board);
-	current_game->board = &copy;
 
 	GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_title(GTK_WINDOW(window), PROG_NAME);
