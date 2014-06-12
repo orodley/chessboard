@@ -1,0 +1,14 @@
+chessboard has the following runtime dependencies:
+
+* gtk
+* librsvg
+
+and to compile you'll need development versions of the above, as well as:
+
+* ragel
+
+Then just run
+$ make
+
+To run tests:
+$ make test
