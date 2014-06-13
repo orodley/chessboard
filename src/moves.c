@@ -108,7 +108,8 @@ bool legal_move(Board *board, Move move, bool check_for_check)
 		uint file = SQUARE_FILE(start) + x_direction;
 		uint rank = SQUARE_RANK(start) + y_direction;
 
-		while (!(file == SQUARE_FILE(end) && rank == SQUARE_RANK(end))) {
+		while ((!(file == SQUARE_FILE(end) && rank == SQUARE_RANK(end))) &&
+				file < BOARD_SIZE && rank < BOARD_SIZE) {
 			if (PIECE_AT(board, file, rank) != EMPTY)
 				return false;
 
