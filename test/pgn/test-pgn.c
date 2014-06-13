@@ -5,7 +5,7 @@
 
 int main(int argc, char *argv[])
 {
-	gtk_init(&argc, &argv);
+	g_type_init();
 
 	if (argc < 2) {
 		fprintf(stderr, "Usage: %s <pgn file>\n", argv[0]);
