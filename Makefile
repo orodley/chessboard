@@ -1,6 +1,6 @@
 NAME = chessboard
 
-CC = gcc
+CC ?= gcc
 CFLAGS = -g -Wall -Wextra -Werror -std=c99 -pedantic -DPROG_NAME=\"$(NAME)\" \
 		 -Isrc/
 CFLAGS += $(shell pkg-config --cflags --libs gtk+-3.0 librsvg-2.0)
