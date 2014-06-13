@@ -438,14 +438,15 @@ bool write_pgn(PGN *pgn, FILE *file)
 	
 	Game *game = pgn->game->children;
 	do {
-		if (game->board->turn == WHITE)
+		// A lot of the logic in here seems reversed/offset by one. This is
+		// because the board associated with a particular move actually lives
+		// at the parent node for that board
+		if (game->board->turn == BLACK)
 			fprintf(file, game->board->move_number == 1 ?
 				"%d." :
 				" %d.", game->board->move_number);
 
 		char move_str[MAX_NOTATION_LENGTH];
-		// We use game->parent->board here, as that is the baord in which
-		// this move was made.
 		move_notation(game->parent->board, game->move, move_str);
 		fprintf(file, " %s", move_str);
 		
