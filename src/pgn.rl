@@ -289,18 +289,22 @@ static Move parse_move(Board *board, char *notation)
 	return NULL_MOVE;
 }
 
-static Result parse_game_termination_marker(char *symbol)
+static Result parse_game_termination_marker(Token *t)
 {
+	if (t->type == ASTERISK)
+		return OTHER;
+	if (t->type != SYMBOL)
+		return NULL_RESULT;
+
+	char *symbol = t->value.string;
 	if (strcmp(symbol, "1-0") == 0)
 		return WHITE_WINS;
 	if (strcmp(symbol, "0-1") == 0)
 		return BLACK_WINS;
 	if (strcmp(symbol, "1/2-1/2") == 0)
 		return DRAW;
-	if (strcmp(symbol, "*") == 0)
-		return OTHER;
 	
-	return NULL_MOVE;
+	return NULL_RESULT;
 }
 
 static char *game_termination_marker(Result r)
@@ -396,7 +400,7 @@ static bool parse_tokens(PGN *pgn, GArray *tokens, GError **err)
 				;
 		}
 
-		if (t->type != SYMBOL)
+		if (t->type != SYMBOL && t->type != ASTERISK) {
 			if (t->type == INTEGER) {
 				g_set_error(err, 0, 0, "Expected a move, got %d",
 						t->value.integer);
@@ -409,7 +413,7 @@ static bool parse_tokens(PGN *pgn, GArray *tokens, GError **err)
 		}
 
 		Result r;
-		if ((r = parse_game_termination_marker(t->value.string)) != NULL_RESULT) {
+		if ((r = parse_game_termination_marker(t)) != NULL_RESULT) {
 			pgn->result = r;
 
 			// If we didn't see a result tag, try to fill it in with the value
