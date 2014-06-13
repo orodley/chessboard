@@ -153,7 +153,9 @@ void print_board(Board *b)
 	for (int rank = 7; rank >= 0; rank--) {
 		putchar('.');
 		for (uint file = 0; file < BOARD_SIZE; file++) {
-			putchar(char_from_piece(PIECE_AT(b, file, rank)));
+			Piece p = PIECE_AT(b, file, rank);
+			char c = char_from_piece(p);
+			putchar(PLAYER(p) == BLACK ? tolower(c) : c);
 		}
 
 		puts(".");
