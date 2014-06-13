@@ -15,7 +15,7 @@ GENERATED_FILES := $(patsubst %.rl, %.c, $(wildcard src/*.rl))
 all: $(NAME)
 
 $(NAME): $(OBJS) main.o
-	$(CC) $(CFLAGS) $^ -o $@
+	$(CC) $^ $(CFLAGS) -o $@
 
 %.c: %.rl
 	ragel -C $<
