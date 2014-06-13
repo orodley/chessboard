@@ -417,7 +417,17 @@ static void write_tag(gpointer key, gpointer value, gpointer user_data)
 	char *tag_value = (char *)value;
 
 	// TODO: handle IO errors
-	fprintf(file, "[%s \"%s\"]\n", tag_name, tag_value);
+	fprintf(file, "[%s \"" , tag_name);
+
+	for (size_t i = 0; tag_value[i] != '\0'; i++) {
+		char c = tag_value[i];
+		if (c == '\\' || c == '"')
+			putc('\\', file);
+
+		putc(c, file);
+	}
+
+	fputs("\"]\n", file);
 }
 
 // TODO: handle IO errors
