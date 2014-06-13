@@ -318,7 +318,12 @@ static bool parse_tokens(PGN *pgn, GArray *tokens)
 
 		char *tag_value = tag_value_token->value.string;
 
-		g_hash_table_insert(pgn->tags, tag_name, tag_value);
+		char *tag_name_copy = malloc(strlen(tag_name) + 1);
+		strcpy(tag_name_copy, tag_name);
+		char *tag_value_copy = malloc(strlen(tag_value) + 1);
+		strcpy(tag_value_copy, tag_value);
+
+		g_hash_table_insert(pgn->tags, tag_name_copy, tag_value_copy);
 
 		Token *close_square_bracket_token = &g_array_index(tokens, Token, ++i);
 		if (close_square_bracket_token->type != R_SQUARE_BRACKET)
@@ -429,7 +434,9 @@ bool write_pgn(PGN *pgn, FILE *file)
 				" %d.", game->board->move_number);
 
 		char move_str[MAX_NOTATION_LENGTH];
-		move_notation(game->board, game->move, move_str);
+		// We use game->parent->board here, as that is the baord in which
+		// this move was made.
+		move_notation(game->parent->board, game->move, move_str);
 		fprintf(file, " %s", move_str);
 		
 		game = first_child(game);
