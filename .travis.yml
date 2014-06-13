@@ -1,5 +1,5 @@
 language: c
 before_install:
   - sudo apt-get update -qq
-  - sudo apt-get install -qq libgtk-3-dev librsvg2-dev ragel
+  - sudo apt-get install -y libgtk-3-dev librsvg2-dev ragel
 script: make && make test
