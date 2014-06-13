@@ -375,6 +375,16 @@ static bool parse_tokens(PGN *pgn, GArray *tokens)
 		Result r;
 		if ((r = parse_game_termination_marker(t->value.string)) != NULL_RESULT) {
 			pgn->result = r;
+
+			// If we didn't see a result tag, try to fill it in with the value
+			// in the game termination marker
+
+			if (!g_hash_table_contains(pgn->tags, "Result")) {
+				char *tmp = malloc(strlen(t->value.string));
+				strcpy(tmp, t->value.string);
+				g_hash_table_insert(pgn->tags, "Result", tmp);
+			}
+
 			return true;
 		}
 
@@ -431,12 +441,23 @@ cleanup:
 	return ret;
 }
 
-static void write_tag(gpointer key, gpointer value, gpointer user_data)
+const char *seven_tag_roster[] =
 {
-	FILE *file = (FILE *)user_data;
-	char *tag_name = (char *)key;
-	char *tag_value = (char *)value;
+	"Event", "Site", "Date", "Round", "White", "Black", "Result"
+};
 
+bool in_seven_tag_roster(char *tag_name)
+{
+	size_t size = sizeof(seven_tag_roster) / sizeof(seven_tag_roster[0]);
+	for (size_t i = 0; i < size; i++)
+		if (strcmp(tag_name, seven_tag_roster[i]) == 0)
+			return true;
+	
+	return false;
+}
+
+static void write_tag(FILE *file, const char *tag_name, const char *tag_value)
+{
 	// TODO: handle IO errors
 	fprintf(file, "[%s \"" , tag_name);
 
@@ -451,11 +472,42 @@ static void write_tag(gpointer key, gpointer value, gpointer user_data)
 	fputs("\"]\n", file);
 }
 
+static char *default_tag_value(const char *tag_name)
+{
+	if (strcmp(tag_name, "Date") == 0)
+		return "????.??.??";
+	if (strcmp(tag_name, "Result") == 0)
+		return "*";
+	else
+		return "?";
+}
+
+static void process_tag(gpointer key, gpointer value, gpointer user_data)
+{
+	FILE *file = (FILE *)user_data;
+	char *tag_name = (char *)key;
+	char *tag_value = (char *)value;
+
+	// We print the standard seven tags first, in a specified order, so don't
+	// print them again.
+	if (in_seven_tag_roster(tag_name))
+		return;
+
+	write_tag(file, tag_name, tag_value);
+}
+
 // TODO: handle IO errors
 bool write_pgn(PGN *pgn, FILE *file)
 {
-	// TODO: sorting
-	g_hash_table_foreach(pgn->tags, write_tag, (void *)file);
+	size_t size = sizeof(seven_tag_roster) / sizeof(seven_tag_roster[0]);
+	for (size_t i = 0; i < size; i++) {
+		const char *tag_name = seven_tag_roster[i];
+		const char *tag_value = g_hash_table_contains(pgn->tags, tag_name) ?
+			g_hash_table_lookup(pgn->tags, tag_name) :
+			default_tag_value(tag_name);
+		write_tag(file, tag_name, tag_value);
+	}
+	g_hash_table_foreach(pgn->tags, process_tag, (void *)file);
 	
 	Game *game = pgn->game->children;
 	do {
