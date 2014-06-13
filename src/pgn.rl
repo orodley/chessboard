@@ -508,6 +508,8 @@ bool write_pgn(PGN *pgn, FILE *file)
 		write_tag(file, tag_name, tag_value);
 	}
 	g_hash_table_foreach(pgn->tags, process_tag, (void *)file);
+
+	putc('\n', file);
 	
 	Game *game = pgn->game->children;
 	do {
