@@ -289,11 +289,28 @@ static Move parse_move(Board *board, char *notation)
 	return NULL_MOVE;
 }
 
-static bool is_game_termination_marker(char *symbol)
+static Result parse_game_termination_marker(char *symbol)
 {
-	return strcmp(symbol, "1-0") == 0 ||
-		strcmp(symbol, "0-1") == 0 ||
-		strcmp(symbol, "1/2-1/2") == 0;
+	if (strcmp(symbol, "1-0") == 0)
+		return WHITE_WINS;
+	if (strcmp(symbol, "0-1") == 0)
+		return BLACK_WINS;
+	if (strcmp(symbol, "1/2-1/2") == 0)
+		return DRAW;
+	if (strcmp(symbol, "*") == 0)
+		return OTHER;
+	
+	return NULL_MOVE;
+}
+
+static char *game_termination_marker(Result r)
+{
+	switch (r) {
+	case WHITE_WINS: return "1-0";
+	case BLACK_WINS: return "0-1";
+	case DRAW: return "1/2-1/2";
+	default: return "*";
+	}
 }
 
 static bool parse_tokens(PGN *pgn, GArray *tokens)
@@ -354,8 +371,12 @@ static bool parse_tokens(PGN *pgn, GArray *tokens)
 
 		if (t->type != SYMBOL)
 			return false;
-		if (is_game_termination_marker(t->value.string))
+
+		Result r;
+		if ((r = parse_game_termination_marker(t->value.string)) != NULL_RESULT) {
+			pgn->result = r;
 			return true;
+		}
 
 		Move m;
 		if ((m = parse_move(game->board, t->value.string)) == NULL_MOVE)
@@ -453,10 +474,7 @@ bool write_pgn(PGN *pgn, FILE *file)
 		game = first_child(game);
 	} while (game != NULL);
 
-	// TODO: write game termination marker - requires storing the result in
-	// the Game struct
-
-	putc('\n', file);
+	fprintf(file, " %s\n", game_termination_marker(pgn->result));
 
 	return true;
 }

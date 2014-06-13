@@ -14,6 +14,8 @@ typedef enum Result
 	OTHER,
 } Result;
 
+#define NULL_RESULT ((Result)~((Result)0))
+
 typedef struct PGN
 {
 	GHashTable *tags;
