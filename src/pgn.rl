@@ -313,7 +313,7 @@ static char *game_termination_marker(Result r)
 	}
 }
 
-static bool parse_tokens(PGN *pgn, GArray *tokens)
+static bool parse_tokens(PGN *pgn, GArray *tokens, GError **err)
 {
 	// Start with tags
 	pgn->tags = g_hash_table_new(g_str_hash, g_str_equal);
@@ -321,17 +321,37 @@ static bool parse_tokens(PGN *pgn, GArray *tokens)
 	size_t i = 0;
 	while ((&g_array_index(tokens, Token, i))->type == L_SQUARE_BRACKET) {
 		Token *tag_name_token = &g_array_index(tokens, Token, ++i);
-		if (tag_name_token->type != SYMBOL)
+		if (tag_name_token->type != SYMBOL) {
+			if (tag_name_token->type == INTEGER) {
+				g_set_error(err, 0, 0,
+						"Unexpected token: %d", tag_name_token->value.integer);
+			} else {
+				g_set_error(err, 0, 0,
+						"Unexpected token: %s", tag_name_token->value.string);
+			}
+
 			return false;
+		}
 
 		char *tag_name = tag_name_token->value.string;
 
-		if (g_hash_table_contains(pgn->tags, tag_name))
+		if (g_hash_table_contains(pgn->tags, tag_name)) {
+			g_set_error(err, 0, 0, "Duplicate tag: %s", tag_name);
 			return false;
+		}
 
 		Token *tag_value_token = &g_array_index(tokens, Token, ++i);
-		if (tag_value_token->type != STRING)
+		if (tag_value_token->type != STRING) {
+			if (tag_name_token->type == INTEGER) {
+				g_set_error(err, 0, 0, "Tag values must be strings, %d is not",
+						tag_value_token->value.integer);
+			} else {
+				g_set_error(err, 0, 0, "Tag values must be strings, %s is not",
+						tag_value_token->value.string);
+			}
+
 			return false;
+		}
 
 		char *tag_value = tag_value_token->value.string;
 
@@ -343,8 +363,11 @@ static bool parse_tokens(PGN *pgn, GArray *tokens)
 		g_hash_table_insert(pgn->tags, tag_name_copy, tag_value_copy);
 
 		Token *close_square_bracket_token = &g_array_index(tokens, Token, ++i);
-		if (close_square_bracket_token->type != R_SQUARE_BRACKET)
+		if (close_square_bracket_token->type != R_SQUARE_BRACKET) {
+			g_set_error(err, 0, 0,
+					"Tag %s has no matching close bracket", tag_name);
 			return false;
+		}
 
 		i++;
 	}
@@ -362,15 +385,28 @@ static bool parse_tokens(PGN *pgn, GArray *tokens)
 	while (i < tokens->len) {
 		Token *t = &g_array_index(tokens, Token, i++);
 		if (t->type == INTEGER) {
-			if (t->value.integer != half_move_number / 2)
+			if (t->value.integer != half_move_number / 2) {
+				g_set_error(err, 0, 0,
+						"Incorrect move number %d (should be %d)",
+						t->value.integer, half_move_number / 2);
 				return false;
+			}
 
 			while ((t = &g_array_index(tokens, Token, i++))->type == DOT)
 				;
 		}
 
 		if (t->type != SYMBOL)
+			if (t->type == INTEGER) {
+				g_set_error(err, 0, 0, "Expected a move, got %d",
+						t->value.integer);
+			} else {
+				g_set_error(err, 0, 0, "Expected a move, got %s",
+						t->value.string);
+			}
+
 			return false;
+		}
 
 		Result r;
 		if ((r = parse_game_termination_marker(t->value.string)) != NULL_RESULT) {
@@ -389,8 +425,11 @@ static bool parse_tokens(PGN *pgn, GArray *tokens)
 		}
 
 		Move m;
-		if ((m = parse_move(game->board, t->value.string)) == NULL_MOVE)
+		if ((m = parse_move(game->board, t->value.string)) == NULL_MOVE) {
+			g_set_error(err, 0, 0, "Expected a move, got %s", t->value.string);
+			
 			return false;
+		}
 
 		Board *new_board = malloc(sizeof *new_board);
 		copy_board(new_board, game->board);
@@ -431,7 +470,7 @@ bool read_pgn(PGN *pgn, const char *input_filename, GError **error)
 	}
 
 	GArray *tokens = tokenize_pgn(buf, length);
-	ret = parse_tokens(pgn, tokens);
+	ret = parse_tokens(pgn, tokens, error);
 	free_tokens(tokens);
 
 cleanup:
