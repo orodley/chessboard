@@ -23,6 +23,7 @@ typedef struct Game
 Game *new_game();
 Game *add_child(Game *game, Move move, Board *board);
 Game *first_child(Game *game);
+Game *root_node(Game *game);
 Game *last_node(Game *game);
 bool has_children(Game *game);
 void free_game(Game *game);

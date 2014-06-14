@@ -47,6 +47,14 @@ Game *first_child(Game *game)
 	return game->children;
 }
 
+Game *root_node(Game *game)
+{
+	while (game->parent != NULL)
+		game = game->parent;
+
+	return game;
+}
+
 Game *last_node(Game *game)
 {
 	while (game->children != NULL)

@@ -98,6 +98,12 @@ int main(int argc, char *argv[])
 	gtk_widget_set_sensitive(back_button, FALSE);
 	gtk_toolbar_insert(GTK_TOOLBAR(tool_bar), back_button_item, 0);
 
+	GtkToolItem *first_button_item =
+		gtk_tool_button_new_from_stock(GTK_STOCK_GOTO_FIRST);
+	g_signal_connect(G_OBJECT(first_button_item), "clicked",
+			G_CALLBACK(first_button_click_callback), NULL);
+	gtk_toolbar_insert(GTK_TOOLBAR(tool_bar), first_button_item, 0);
+
 	GtkWidget *drawing_area = gtk_drawing_area_new();
 	board_display = drawing_area;
 	gint width, height;

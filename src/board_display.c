@@ -280,6 +280,18 @@ void open_pgn_callback(GtkMenuItem *menu_item, gpointer user_data)
 	gtk_widget_destroy(dialog);
 }
 
+gboolean first_button_click_callback(GtkWidget *widget, gpointer user_data)
+{
+	IGNORE(widget);
+	IGNORE(user_data);
+
+	current_game = root_node(current_game);
+	set_button_sensitivity();
+	gtk_widget_queue_draw(board_display);
+
+	return FALSE;
+}
+
 gboolean last_button_click_callback(GtkWidget *widget, gpointer user_data)
 {
 	IGNORE(widget);
