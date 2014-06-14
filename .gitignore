@@ -1,4 +1,5 @@
 src/pgn.c
 *.o
+tags
 
 chessboard

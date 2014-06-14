@@ -1,9 +1,13 @@
-NAME = chessboard
+NAME := chessboard
 
 CC ?= gcc
-CFLAGS = -g -Wall -Wextra -Werror -std=c99 -pedantic -DPROG_NAME=\"$(NAME)\" \
+CFLAGS := -Wall -Wextra -Werror -std=c99 -pedantic -DPROG_NAME=\"$(NAME)\" \
 		 -Isrc/
 CFLAGS += $(shell pkg-config --cflags --libs gtk+-3.0 librsvg-2.0)
+
+ifdef DEBUG
+	CFLAGS += -g
+endif
 
 OBJS := $(patsubst %.c,  %.o, $(wildcard src/*.c))
 OBJS += $(patsubst %.rl, %.o, $(wildcard src/*.rl))
@@ -16,6 +20,7 @@ all: $(NAME)
 
 $(NAME): $(OBJS) main.o
 	$(CC) $^ $(CFLAGS) -o $@
+	[ -z "$$DEBUG" ] || ctags -R
 
 %.c: %.rl
 	ragel -C $<
@@ -23,6 +28,7 @@ $(NAME): $(OBJS) main.o
 clean:
 	rm -f $(NAME) src/*.o
 	rm -f $(GENERATED_FILES)
+	rm -f tags
 
 test: test/pgn
 
