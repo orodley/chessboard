@@ -114,11 +114,10 @@ bool from_fen(Board *board, const char *fen_str)
 	if (file_char == '-') {
 		board->en_passant = NULL_SQUARE;
 	} else {
-		char rank_char = fen_str[i++];
-		if (rank_char < 'a' || rank_char > 'g')
+		if (file_char < 'a' || file_char > 'g')
 			return false;
 
-		rank_char = fen_str[i++];
+		char rank_char = fen_str[i++];
 		if (!isdigit(rank_char))
 			return false;
 
