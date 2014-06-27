@@ -9,9 +9,9 @@
 #define PLAYERS 2
 
 typedef uint_fast16_t Square;
-#define SQUARE(file, rank) (((file) << 8) | (rank))
-#define SQUARE_FILE(s) ((s) >> 8)
-#define SQUARE_RANK(s) ((s) & 0xF)
+#define SQUARE(x, y) (((x) << 8) | (y))
+#define SQUARE_X(s) ((s) >> 8)
+#define SQUARE_Y(s) ((s) & 0xF)
 
 #define NULL_SQUARE ((Square)(~((Square)0)))
 
@@ -83,8 +83,8 @@ typedef struct Board
 	Piece pieces[BOARD_SIZE * BOARD_SIZE];
 } Board;
 
-#define PIECE_AT(b, file, rank) ((b)->pieces[((rank) * BOARD_SIZE) + (file)])
-#define PIECE_AT_SQUARE(b, square) PIECE_AT(b, SQUARE_FILE(square), SQUARE_RANK(square))
+#define PIECE_AT(b, x, y) ((b)->pieces[((y) * BOARD_SIZE) + (x)])
+#define PIECE_AT_SQUARE(b, square) PIECE_AT(b, SQUARE_X(square), SQUARE_Y(square))
 
 void copy_board(Board *dst, Board *src);
 Piece piece_from_char(char c);

@@ -87,9 +87,9 @@ gboolean board_draw_callback(GtkWidget *widget, cairo_t *cr, gpointer data)
 	// Color light squares one-by-one
 	cairo_set_line_width(cr, 0);
 
-	for (uint file = 0; file < BOARD_SIZE; file++) {
-		for (int rank = BOARD_SIZE - 1; rank >= 0; rank--) {
-			if ((rank + file) % 2 == 0) {
+	for (uint x = 0; x < BOARD_SIZE; x++) {
+		for (int y = BOARD_SIZE - 1; y >= 0; y--) {
+			if ((y + x) % 2 == 0) {
 				// dark squares
 				cairo_set_source_rgb(cr, 0.450980, 0.537255, 0.713725);
 				cairo_rectangle(cr, 0, 0, square_size, square_size);
@@ -103,8 +103,8 @@ gboolean board_draw_callback(GtkWidget *widget, cairo_t *cr, gpointer data)
 
 			// Draw the piece (if any)
 			Piece p;
-			if ((p = PIECE_AT(current_game->board, file, rank)) != EMPTY &&
-					(drag_source == NULL_SQUARE || SQUARE(file, rank) != drag_source)) {
+			if ((p = PIECE_AT(current_game->board, x, y)) != EMPTY &&
+					(drag_source == NULL_SQUARE || SQUARE(x, y) != drag_source)) {
 				draw_piece(cr, p, square_size);
 			}
 
@@ -126,10 +126,10 @@ gboolean board_draw_callback(GtkWidget *widget, cairo_t *cr, gpointer data)
 Square board_coords_to_square(GtkWidget *drawing_area, uint x, uint y)
 {
 	uint square_size = get_square_size(drawing_area);
-	uint file = x / square_size;
-	uint rank = BOARD_SIZE - 1 - y / square_size;
+	uint board_x = x / square_size;
+	uint board_y = BOARD_SIZE - 1 - y / square_size;
 
-	return SQUARE(file, rank);
+	return SQUARE(board_x, board_y);
 }
 
 gboolean board_mouse_down_callback(GtkWidget *widget, GdkEvent *event,

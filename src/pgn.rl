@@ -210,12 +210,12 @@ static GArray *tokenize_pgn(char *buf, gsize length)
 static Move parse_move(Board *board, char *notation)
 {
 	if (strcmp(notation, "O-O") == 0) {
-		uint rank = board->turn == WHITE ? 0 : 7;
-		return MOVE(SQUARE(4, rank), SQUARE(6, rank));
+		uint y = board->turn == WHITE ? 0 : 7;
+		return MOVE(SQUARE(4, y), SQUARE(6, y));
 	}
 	if (strcmp(notation, "O-O-O") == 0) {
-		uint rank = board->turn == WHITE ? 0 : 7;
-		return MOVE(SQUARE(4, rank), SQUARE(2, rank));
+		uint y = board->turn == WHITE ? 0 : 7;
+		return MOVE(SQUARE(4, y), SQUARE(2, y));
 	}
 
 	char stripped[5]; // max length without 'x#+'s, + 1 for null terminator
