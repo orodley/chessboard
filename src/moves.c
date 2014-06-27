@@ -215,7 +215,7 @@ bool gives_mate(Board *board, Move move, Player player)
 // Check whether we need to disambiguate between two pieces for a particular
 // move. e.g.: there are two rooks that can move to the square. If so, return
 // the location of the other piece that is confusing things.
-Square ambiguous_piece(Board *board, Move move)
+static Square ambiguous_piece(Board *board, Move move)
 {
 	Piece_type type = PIECE_TYPE(PIECE_AT_SQUARE(board, START_SQUARE(move)));
 	for (uint x = 0; x < BOARD_SIZE; x++) {

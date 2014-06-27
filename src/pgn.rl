@@ -55,7 +55,7 @@ void print_token(Token *t)
 	}
 }
 
-bool symbol_is_integer(Token *t)
+static bool symbol_is_integer(Token *t)
 {
 	char *str = t->value.string;
 	for (size_t i = 0; str[i] != '\0'; i++)
@@ -66,7 +66,7 @@ bool symbol_is_integer(Token *t)
 }
 		
 
-char *escape_string(char *str, size_t length)
+static char *escape_string(char *str, size_t length)
 {
 	char *out = malloc(length + 1);
 	size_t j = 0;
@@ -447,7 +447,7 @@ static bool parse_tokens(PGN *pgn, GArray *tokens, GError **err)
 	return true;
 }
 
-void free_tokens(GArray *tokens)
+static void free_tokens(GArray *tokens)
 {
 	for (size_t i = 0; i < tokens->len; i++) {
 		Token *t = &g_array_index(tokens, Token, i);
@@ -484,12 +484,12 @@ cleanup:
 	return ret;
 }
 
-const char *seven_tag_roster[] =
+static const char *seven_tag_roster[] =
 {
 	"Event", "Site", "Date", "Round", "White", "Black", "Result"
 };
 
-bool in_seven_tag_roster(char *tag_name)
+static bool in_seven_tag_roster(char *tag_name)
 {
 	size_t size = sizeof(seven_tag_roster) / sizeof(seven_tag_roster[0]);
 	for (size_t i = 0; i < size; i++)

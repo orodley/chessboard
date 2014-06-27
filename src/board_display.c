@@ -29,7 +29,7 @@ void load_svgs(char *dir, GError **err)
 	}
 }
 
-uint get_square_size(GtkWidget *board)
+static uint get_square_size(GtkWidget *board)
 {
 	guint width  = gtk_widget_get_allocated_width(board);
 	guint height = gtk_widget_get_allocated_height(board);
@@ -51,7 +51,7 @@ static Square drag_source = NULL_SQUARE;
 static uint mouse_x;
 static uint mouse_y;
 
-void draw_piece(cairo_t *cr, Piece p, uint size)
+static void draw_piece(cairo_t *cr, Piece p, uint size)
 {
 	RsvgHandle *piece_image =
 		piece_images[PLAYER(p)][PIECE_TYPE(p) - 1];
@@ -123,7 +123,7 @@ gboolean board_draw_callback(GtkWidget *widget, cairo_t *cr, gpointer data)
 	return FALSE;
 }
 
-Square board_coords_to_square(GtkWidget *drawing_area, uint x, uint y)
+static Square board_coords_to_square(GtkWidget *drawing_area, uint x, uint y)
 {
 	uint square_size = get_square_size(drawing_area);
 	uint board_x = x / square_size;

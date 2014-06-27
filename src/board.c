@@ -163,7 +163,7 @@ void print_board(Board *b)
 	printf("%s to move\n", b->turn == WHITE ? "White" : "Black");
 }
 
-Square find_piece_looking_at(Board *board, Square square, Player piece_owner)
+static Square find_piece_looking_at(Board *board, Square square, Player piece_owner)
 {
 	// We need to make sure we don't have infinite recursion in legal_move.
 	// This can happen with looking for checks - we need to see if there are
@@ -200,7 +200,7 @@ cleanup:
 	return ret;
 }
 
-Square find_attacking_piece(Board *board, Square square, Player attacker)
+static Square find_attacking_piece(Board *board, Square square, Player attacker)
 {
 	// The easiest way to do this without duplicating logic from legal_move
 	// is to put an enemy piece there and then check if moving there is legal.
@@ -216,12 +216,12 @@ Square find_attacking_piece(Board *board, Square square, Player attacker)
 	return s;
 }
 
-bool under_attack(Board *board, Square square, Player attacker)
+static bool under_attack(Board *board, Square square, Player attacker)
 {
 	return find_attacking_piece(board, square, attacker) != NULL_SQUARE;
 }
 
-Square find_king(Board *board, Player p)
+static Square find_king(Board *board, Player p)
 {
 	Piece king = PIECE(p, KING);
 
