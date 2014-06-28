@@ -75,9 +75,10 @@ bool has_children(Game *game)
 
 void free_game(Game *game)
 {
-	Game *children = game->children;
-	while (children != NULL && children->sibling != NULL)
-		free_game(children);
-
 	free(game->board);
+
+	if (game->sibling != NULL)
+		free_game(game->sibling);
+	if (game->children != NULL)
+		free_game(game->sibling);
 }
