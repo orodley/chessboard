@@ -175,10 +175,7 @@ gboolean board_mouse_up_callback(GtkWidget *widget, GdkEvent *event,
 		else
 			printf(" ..%s\n", notation);
 
-		Board *copy = malloc(sizeof *copy);
-		copy_board(copy, current_game->board);
-		perform_move(copy, m);
-		current_game = add_child(current_game, m, copy);
+		current_game = add_child(current_game, m);
 
 		set_button_sensitivity();
 	}

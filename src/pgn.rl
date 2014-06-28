@@ -435,11 +435,7 @@ static bool parse_tokens(PGN *pgn, GArray *tokens, GError **err)
 			return false;
 		}
 
-		Board *new_board = malloc(sizeof *new_board);
-		copy_board(new_board, game->board);
-		perform_move(new_board, m);
-		add_child(game, m, new_board);
-		game = first_child(game);
+		game = add_child(game, m);
 
 		half_move_number++;
 	}
