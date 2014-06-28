@@ -1,6 +1,7 @@
 #include <gtk/gtk.h>
 #include <librsvg/rsvg.h>
 #include <librsvg/rsvg-cairo.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -46,6 +47,7 @@ Game *current_game;
 GtkWidget *board_display;
 GtkWidget *back_button;
 GtkWidget *forward_button;
+bool board_flipped = false;
 
 static Square drag_source = NULL_SQUARE;
 static uint mouse_x;
@@ -97,7 +99,8 @@ gboolean board_draw_callback(GtkWidget *widget, cairo_t *cr, gpointer data)
 	// Color light squares one-by-one
 	cairo_set_line_width(cr, 0);
 	for (uint x = 0; x < BOARD_SIZE; x++) {
-		for (int y = BOARD_SIZE - 1; y >= 0; y--) {
+		for (int rank = BOARD_SIZE - 1; rank >= 0; rank--) {
+			int y = board_flipped ? BOARD_SIZE - rank - 1 : rank;
 			if ((y + x) % 2 == 0) {
 				// dark squares
 				cairo_set_source_rgb(cr, 0.450980, 0.537255, 0.713725);
@@ -152,7 +155,9 @@ static Square board_coords_to_square(GtkWidget *drawing_area, uint x, uint y)
 {
 	uint square_size = get_square_size(drawing_area);
 	uint board_x = x / square_size;
-	uint board_y = BOARD_SIZE - 1 - y / square_size;
+	uint board_y = y / square_size;
+	if (!board_flipped)
+		board_y = BOARD_SIZE - 1 - board_y;
 
 	return SQUARE(board_x, board_y);
 }
@@ -275,6 +280,18 @@ gboolean last_button_click_callback(GtkWidget *widget, gpointer user_data)
 
 	current_game = last_node(current_game);
 	set_button_sensitivity();
+	gtk_widget_queue_draw(board_display);
+
+	return FALSE;
+}
+
+// Flip the board
+gboolean flip_button_click_callback(GtkWidget *widget, gpointer user_data)
+{
+	IGNORE(widget);
+	IGNORE(user_data);
+
+	board_flipped = !board_flipped;
 	gtk_widget_queue_draw(board_display);
 
 	return FALSE;

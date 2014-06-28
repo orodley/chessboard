@@ -25,6 +25,8 @@ gboolean back_button_click_callback(GtkWidget *widget, gpointer user_data);
 gboolean forward_button_click_callback(GtkWidget *widget, gpointer user_data);
 gboolean first_button_click_callback(GtkWidget *widget, gpointer user_data);
 gboolean last_button_click_callback(GtkWidget *widget, gpointer user_data);
+gboolean flip_button_click_callback(GtkWidget *widget, gpointer user_data);
+
 void open_pgn_callback(GtkMenuItem *menu_item, gpointer user_data);
 
 extern Board *current_board;

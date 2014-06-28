@@ -76,6 +76,14 @@ int main(int argc, char *argv[])
 	gtk_toolbar_set_show_arrow(GTK_TOOLBAR(tool_bar), false);
 	gtk_widget_set_halign(tool_bar, GTK_ALIGN_CENTER);
 
+	GtkToolItem *flip_button_item =
+		gtk_tool_button_new_from_stock(GTK_STOCK_REFRESH);
+	g_signal_connect(G_OBJECT(flip_button_item), "clicked",
+			G_CALLBACK(flip_button_click_callback), NULL);
+	gtk_toolbar_insert(GTK_TOOLBAR(tool_bar), flip_button_item, 0);
+
+	gtk_toolbar_insert(GTK_TOOLBAR(tool_bar), gtk_separator_tool_item_new(), 0);
+
 	GtkToolItem *last_button_item =
 		gtk_tool_button_new_from_stock(GTK_STOCK_GOTO_LAST);
 	g_signal_connect(G_OBJECT(last_button_item), "clicked",
