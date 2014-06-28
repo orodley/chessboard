@@ -76,6 +76,9 @@ static void draw_piece(cairo_t *cr, Piece p, uint size)
 	cairo_scale(cr, 1 / scale, 1 / scale);
 }
 
+// This should be divisible by 2 so as not to leave a one pixel gap
+#define HIGHLIGHT_LINE_WIDTH 4
+
 gboolean board_draw_callback(GtkWidget *widget, cairo_t *cr, gpointer data)
 {
 	IGNORE(data);
@@ -105,6 +108,22 @@ gboolean board_draw_callback(GtkWidget *widget, cairo_t *cr, gpointer data)
 				cairo_set_source_rgb(cr, 0.952941, 0.952941, 0.952941);
 				cairo_rectangle(cr, 0, 0, square_size, square_size);
 				cairo_fill(cr);
+			}
+
+			// Highlight the source and target squares of the last move
+			Move last_move = current_game->move;
+			Square s = SQUARE(x, y);
+			if (last_move != NULL_MOVE &&
+					(s == START_SQUARE(last_move) || s == END_SQUARE(last_move))) {
+				cairo_set_source_rgb(cr, 0.225, 0.26, 0.3505);
+				cairo_set_line_width(cr, HIGHLIGHT_LINE_WIDTH);
+				cairo_translate(cr, HIGHLIGHT_LINE_WIDTH / 2, HIGHLIGHT_LINE_WIDTH / 2);
+				cairo_rectangle(cr, 0, 0, square_size - HIGHLIGHT_LINE_WIDTH,
+						square_size - HIGHLIGHT_LINE_WIDTH);
+				cairo_stroke(cr);
+
+				cairo_set_line_width(cr, 1);
+				cairo_translate(cr, -HIGHLIGHT_LINE_WIDTH / 2, -HIGHLIGHT_LINE_WIDTH / 2);
 			}
 
 			// Draw the piece, if there is one
