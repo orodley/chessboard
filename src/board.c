@@ -61,7 +61,7 @@ bool from_fen(Board *board, const char *fen_str)
 {
 	uint i = 0;
 
-	for (int y = 7; y >= 0; y--) {
+	for (int y = BOARD_SIZE - 1; y >= 0; y--) {
 		char c;
 		uint x = 0;
 		while ((c = fen_str[i++]) != '/' && c != ' ') {
@@ -149,7 +149,7 @@ bool from_fen(Board *board, const char *fen_str)
 void print_board(Board *b)
 {
 	puts("..........");
-	for (int y = 7; y >= 0; y--) {
+	for (int y = BOARD_SIZE - 1; y >= 0; y--) {
 		putchar('.');
 		for (uint x = 0; x < BOARD_SIZE; x++) {
 			Piece p = PIECE_AT(b, x, y);
@@ -240,6 +240,9 @@ bool in_check(Board *board, Player p)
 	return under_attack(board, king_location, OTHER_PLAYER(p));
 }
 
+// This could be more simply written as "number of legal moves = 0", if the
+// enumeration of all legal moves is implemented at some point.
+// As it is we don't have that, so this is simpler.
 bool checkmate(Board *board, Player p)
 {
 	// We must be in check
@@ -263,7 +266,7 @@ bool checkmate(Board *board, Player p)
 		}
 	}
 
-	// Can the attacking piece be taken?
+	// Can the attacking piece be captured?
 	Square attacker = find_attacking_piece(board, king_location, other);
 	if (under_attack(board, attacker, p))
 		return false;
@@ -300,7 +303,7 @@ bool checkmate(Board *board, Player p)
 
 bool can_castle_kingside(Board *board, Player p)
 {
-	uint y = p == WHITE ? 0 : 7;
+	uint y = p == WHITE ? 0 : BOARD_SIZE - 1;
 	Player other = OTHER_PLAYER(p);
 
 	return board->castling[p].kingside && !in_check(board, p) &&
@@ -312,7 +315,7 @@ bool can_castle_kingside(Board *board, Player p)
 
 bool can_castle_queenside(Board *board, Player p)
 {
-	uint y = p == WHITE ? 0 : 7;
+	uint y = p == WHITE ? 0 : BOARD_SIZE - 1;
 	Player other = OTHER_PLAYER(p);
 
 	return board->castling[p].kingside && !in_check(board, p) &&

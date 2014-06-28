@@ -31,8 +31,8 @@ void load_svgs(char *dir, GError **err)
 
 static uint get_square_size(GtkWidget *board)
 {
-	guint width  = gtk_widget_get_allocated_width(board);
-	guint height = gtk_widget_get_allocated_height(board);
+	uint width  = gtk_widget_get_allocated_width(board);
+	uint height = gtk_widget_get_allocated_height(board);
 
 	uint max_square_width = width / BOARD_SIZE;
 	uint max_square_height = height / BOARD_SIZE;
@@ -41,22 +41,28 @@ static uint get_square_size(GtkWidget *board)
 		max_square_height;
 }
 
+
 Game *current_game;
 GtkWidget *board_display;
 GtkWidget *back_button;
 GtkWidget *forward_button;
 
-
 static Square drag_source = NULL_SQUARE;
 static uint mouse_x;
 static uint mouse_y;
+
+void set_button_sensitivity()
+{
+	gtk_widget_set_sensitive(back_button, current_game->parent != NULL);
+	gtk_widget_set_sensitive(forward_button, has_children(current_game));
+}
 
 static void draw_piece(cairo_t *cr, Piece p, uint size)
 {
 	RsvgHandle *piece_image =
 		piece_images[PLAYER(p)][PIECE_TYPE(p) - 1];
 
-	// 0.025 is a bit of a magic number. It's basically just the amount by
+	// 0.025 is a bit of a magic number. It's basically just the factor by
 	// which the pieces must be scaled in order to fit correctly with the
 	// default square size. We then scale that based on how big the squares
 	// actually are.
@@ -77,7 +83,8 @@ gboolean board_draw_callback(GtkWidget *widget, cairo_t *cr, gpointer data)
 	// Unless the width/height of the drawing area is exactly a multiple of 8,
 	// there's going to be some leftover space. We want to have the board
 	// completely centered, so we pad by half the leftover space.
-	// We rely on the widget being perfectly square in these calculations.
+	// We rely on the widget being perfectly square in these calculations, as
+	// this is enforced by its containing aspect frame.
 	uint square_size = get_square_size(widget);
 	uint leftover_space =
 		gtk_widget_get_allocated_width(widget) - square_size * BOARD_SIZE;
@@ -86,7 +93,6 @@ gboolean board_draw_callback(GtkWidget *widget, cairo_t *cr, gpointer data)
 
 	// Color light squares one-by-one
 	cairo_set_line_width(cr, 0);
-
 	for (uint x = 0; x < BOARD_SIZE; x++) {
 		for (int y = BOARD_SIZE - 1; y >= 0; y--) {
 			if ((y + x) % 2 == 0) {
@@ -101,7 +107,7 @@ gboolean board_draw_callback(GtkWidget *widget, cairo_t *cr, gpointer data)
 				cairo_fill(cr);
 			}
 
-			// Draw the piece (if any)
+			// Draw the piece, if there is one
 			Piece p;
 			if ((p = PIECE_AT(current_game->board, x, y)) != EMPTY &&
 					(drag_source == NULL_SQUARE || SQUARE(x, y) != drag_source)) {
@@ -132,6 +138,7 @@ static Square board_coords_to_square(GtkWidget *drawing_area, uint x, uint y)
 	return SQUARE(board_x, board_y);
 }
 
+// Start dragging a piece if the mouse is over one.
 gboolean board_mouse_down_callback(GtkWidget *widget, GdkEvent *event,
 		gpointer user_data)
 {
@@ -149,12 +156,7 @@ gboolean board_mouse_down_callback(GtkWidget *widget, GdkEvent *event,
 	return FALSE;
 }
 
-void set_button_sensitivity()
-{
-	gtk_widget_set_sensitive(back_button, current_game->parent != NULL);
-	gtk_widget_set_sensitive(forward_button, has_children(current_game));
-}
-
+// Try to move a piece if we're currently dragging one
 gboolean board_mouse_up_callback(GtkWidget *widget, GdkEvent *event,
 		gpointer user_data)
 {
@@ -167,9 +169,10 @@ gboolean board_mouse_up_callback(GtkWidget *widget, GdkEvent *event,
 	Square drag_target = board_coords_to_square(widget, e->x, e->y);
 	Move m = MOVE(drag_source, drag_target);
 	if (legal_move(current_game->board, m, true)) {
-		char notation[MAX_NOTATION_LENGTH];
-		move_notation(current_game->board, m, notation);
+		char notation[MAX_ALGEBRAIC_NOTATION_LENGTH];
+		algebraic_notation_for(current_game->board, m, notation);
 
+		// TODO: Stop printing this when we have a proper move list GUI
 		if (current_game->board->turn == WHITE)
 			printf("%d. %s\n", current_game->board->move_number, notation);
 		else
@@ -186,6 +189,7 @@ gboolean board_mouse_up_callback(GtkWidget *widget, GdkEvent *event,
 	return FALSE;
 }
 
+// Redraw if we're dragging a piece
 gboolean board_mouse_move_callback(GtkWidget *widget, GdkEvent *event,
 		gpointer user_data)
 {
@@ -201,6 +205,7 @@ gboolean board_mouse_move_callback(GtkWidget *widget, GdkEvent *event,
 	return FALSE;
 }
 
+// Back up one move
 gboolean back_button_click_callback(GtkWidget *widget, gpointer user_data)
 {
 	IGNORE(widget);
@@ -215,6 +220,7 @@ gboolean back_button_click_callback(GtkWidget *widget, gpointer user_data)
 	return FALSE;
 }
 
+// Go forward one move
 gboolean forward_button_click_callback(GtkWidget *widget, gpointer user_data)
 {
 	IGNORE(widget);
@@ -229,6 +235,33 @@ gboolean forward_button_click_callback(GtkWidget *widget, gpointer user_data)
 	return FALSE;
 }
 
+// Go to the start of the game
+gboolean first_button_click_callback(GtkWidget *widget, gpointer user_data)
+{
+	IGNORE(widget);
+	IGNORE(user_data);
+
+	current_game = root_node(current_game);
+	set_button_sensitivity();
+	gtk_widget_queue_draw(board_display);
+
+	return FALSE;
+}
+
+// Go to the end of the game
+gboolean last_button_click_callback(GtkWidget *widget, gpointer user_data)
+{
+	IGNORE(widget);
+	IGNORE(user_data);
+
+	current_game = last_node(current_game);
+	set_button_sensitivity();
+	gtk_widget_queue_draw(board_display);
+
+	return FALSE;
+}
+
+// Load a new game from a PGN file
 void open_pgn_callback(GtkMenuItem *menu_item, gpointer user_data)
 {
 	IGNORE(menu_item);
@@ -275,28 +308,4 @@ void open_pgn_callback(GtkMenuItem *menu_item, gpointer user_data)
 	}
 
 	gtk_widget_destroy(dialog);
-}
-
-gboolean first_button_click_callback(GtkWidget *widget, gpointer user_data)
-{
-	IGNORE(widget);
-	IGNORE(user_data);
-
-	current_game = root_node(current_game);
-	set_button_sensitivity();
-	gtk_widget_queue_draw(board_display);
-
-	return FALSE;
-}
-
-gboolean last_button_click_callback(GtkWidget *widget, gpointer user_data)
-{
-	IGNORE(widget);
-	IGNORE(user_data);
-
-	current_game = last_node(current_game);
-	set_button_sensitivity();
-	gtk_widget_queue_draw(board_display);
-
-	return FALSE;
 }

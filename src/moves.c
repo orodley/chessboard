@@ -36,7 +36,7 @@ void perform_move(Board *board, Move move)
 	// Check if we're castling so we can move the rook too
 	uint dx = SQUARE_X(end) - SQUARE_X(start);
 	if (type == KING && abs(dx) > 1) {
-		uint y = PLAYER(p) == WHITE ? 0 : 7;
+		uint y = PLAYER(p) == WHITE ? 0 : BOARD_SIZE - 1;
 		bool kingside = SQUARE_X(end) == 6;
 		if (kingside) {
 			PIECE_AT(board, 7, y) = EMPTY;
@@ -53,7 +53,7 @@ void perform_move(Board *board, Move move)
 		c->kingside = false;
 		c->queenside = false;
 	} else if (type == ROOK) {
-		if (SQUARE_X(start) == 7) {
+		if (SQUARE_X(start) == BOARD_SIZE - 1) {
 			c->kingside = false;
 		} else if (SQUARE_X(start) == 0) {
 			c->queenside = false;
@@ -65,7 +65,7 @@ void perform_move(Board *board, Move move)
 		board->half_move_clock = 0;
 
 	// Update the turn tracker
-	board->turn = 1 - board->turn; // (0, 1) = (BLACK, WHITE) & 0 -> 1, 1 -> 0
+	board->turn = OTHER_PLAYER(board->turn);
 
 	PIECE_AT_SQUARE(board, end) = PIECE_AT_SQUARE(board, start);
 	PIECE_AT_SQUARE(board, start) = EMPTY;
@@ -164,7 +164,7 @@ bool legal_move(Board *board, Move move, bool check_for_check)
 			break;
 		}
 
-		if (SQUARE_Y(end) != (PLAYER(p) == WHITE ? 0 : 7)) {
+		if (SQUARE_Y(end) != (PLAYER(p) == WHITE ? 0 : BOARD_SIZE - 1)) {
 			legal_movement = false;
 			break;
 		}
@@ -232,9 +232,9 @@ static Square ambiguous_piece(Board *board, Move move)
 	return NULL_SQUARE;
 }
 
-// str should have space for at least 7 (MAX_NOTATION_LENGTH) characters, to
-// be able to fit the longest of moves. e.g.: Raxd1+\0
-void move_notation(Board *board, Move move, char *str)
+// str should have space for at least 7 (MAX_ALGEBRAIC_NOTATION_LENGTH)
+// characters, to be able to fit the longest of moves.
+void algebraic_notation_for(Board *board, Move move, char *str)
 {
 	uint i = 0;
 	Square start = START_SQUARE(move);
