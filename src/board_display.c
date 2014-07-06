@@ -1,5 +1,6 @@
 #include <gtk/gtk.h>
 #include <librsvg/rsvg.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -28,10 +29,10 @@ void load_svgs(char *dir, GError **err)
 	}
 }
 
-uint get_square_size(GtkWidget *board)
+static uint get_square_size(GtkWidget *board)
 {
-	guint width  = gtk_widget_get_allocated_width(board);
-	guint height = gtk_widget_get_allocated_height(board);
+	uint width  = gtk_widget_get_allocated_width(board);
+	uint height = gtk_widget_get_allocated_height(board);
 
 	uint max_square_width = width / BOARD_SIZE;
 	uint max_square_height = height / BOARD_SIZE;
@@ -40,22 +41,30 @@ uint get_square_size(GtkWidget *board)
 		max_square_height;
 }
 
+
 Game *current_game;
 GtkWidget *board_display;
 GtkWidget *back_button;
 GtkWidget *forward_button;
-
+// TODO: this should flip on the x-axis too
+bool board_flipped = false;
 
 static Square drag_source = NULL_SQUARE;
 static uint mouse_x;
 static uint mouse_y;
 
-void draw_piece(cairo_t *cr, Piece p, uint size)
+void set_button_sensitivity()
+{
+	gtk_widget_set_sensitive(back_button, current_game->parent != NULL);
+	gtk_widget_set_sensitive(forward_button, has_children(current_game));
+}
+
+static void draw_piece(cairo_t *cr, Piece p, uint size)
 {
 	RsvgHandle *piece_image =
 		piece_images[PLAYER(p)][PIECE_TYPE(p) - 1];
 
-	// 0.025 is a bit of a magic number. It's basically just the amount by
+	// 0.025 is a bit of a magic number. It's basically just the factor by
 	// which the pieces must be scaled in order to fit correctly with the
 	// default square size. We then scale that based on how big the squares
 	// actually are.
@@ -69,6 +78,9 @@ void draw_piece(cairo_t *cr, Piece p, uint size)
 	cairo_scale(cr, 1 / scale, 1 / scale);
 }
 
+// This should be divisible by 2 so as not to leave a one pixel gap
+#define HIGHLIGHT_LINE_WIDTH 4
+
 gboolean board_draw_callback(GtkWidget *widget, cairo_t *cr, gpointer data)
 {
 	IGNORE(data);
@@ -76,7 +88,8 @@ gboolean board_draw_callback(GtkWidget *widget, cairo_t *cr, gpointer data)
 	// Unless the width/height of the drawing area is exactly a multiple of 8,
 	// there's going to be some leftover space. We want to have the board
 	// completely centered, so we pad by half the leftover space.
-	// We rely on the widget being perfectly square in these calculations.
+	// We rely on the widget being perfectly square in these calculations, as
+	// this is enforced by its containing aspect frame.
 	uint square_size = get_square_size(widget);
 	uint leftover_space =
 		gtk_widget_get_allocated_width(widget) - square_size * BOARD_SIZE;
@@ -85,10 +98,10 @@ gboolean board_draw_callback(GtkWidget *widget, cairo_t *cr, gpointer data)
 
 	// Color light squares one-by-one
 	cairo_set_line_width(cr, 0);
-
-	for (uint file = 0; file < BOARD_SIZE; file++) {
+	for (uint x = 0; x < BOARD_SIZE; x++) {
 		for (int rank = BOARD_SIZE - 1; rank >= 0; rank--) {
-			if ((rank + file) % 2 == 0) {
+			int y = board_flipped ? BOARD_SIZE - rank - 1 : rank;
+			if ((y + x) % 2 == 0) {
 				// dark squares
 				cairo_set_source_rgb(cr, 0.450980, 0.537255, 0.713725);
 				cairo_rectangle(cr, 0, 0, square_size, square_size);
@@ -100,10 +113,26 @@ gboolean board_draw_callback(GtkWidget *widget, cairo_t *cr, gpointer data)
 				cairo_fill(cr);
 			}
 
-			// Draw the piece (if any)
+			// Highlight the source and target squares of the last move
+			Move last_move = current_game->move;
+			Square s = SQUARE(x, y);
+			if (last_move != NULL_MOVE &&
+					(s == START_SQUARE(last_move) || s == END_SQUARE(last_move))) {
+				cairo_set_source_rgb(cr, 0.225, 0.26, 0.3505);
+				cairo_set_line_width(cr, HIGHLIGHT_LINE_WIDTH);
+				cairo_translate(cr, HIGHLIGHT_LINE_WIDTH / 2, HIGHLIGHT_LINE_WIDTH / 2);
+				cairo_rectangle(cr, 0, 0, square_size - HIGHLIGHT_LINE_WIDTH,
+						square_size - HIGHLIGHT_LINE_WIDTH);
+				cairo_stroke(cr);
+
+				cairo_set_line_width(cr, 1);
+				cairo_translate(cr, -HIGHLIGHT_LINE_WIDTH / 2, -HIGHLIGHT_LINE_WIDTH / 2);
+			}
+
+			// Draw the piece, if there is one
 			Piece p;
-			if ((p = PIECE_AT(current_game->board, file, rank)) != EMPTY &&
-					(drag_source == NULL_SQUARE || SQUARE(file, rank) != drag_source)) {
+			if ((p = PIECE_AT(current_game->board, x, y)) != EMPTY &&
+					(drag_source == NULL_SQUARE || SQUARE(x, y) != drag_source)) {
 				draw_piece(cr, p, square_size);
 			}
 
@@ -122,15 +151,18 @@ gboolean board_draw_callback(GtkWidget *widget, cairo_t *cr, gpointer data)
 	return FALSE;
 }
 
-Square board_coords_to_square(GtkWidget *drawing_area, uint x, uint y)
+static Square board_coords_to_square(GtkWidget *drawing_area, uint x, uint y)
 {
 	uint square_size = get_square_size(drawing_area);
-	uint file = x / square_size;
-	uint rank = BOARD_SIZE - 1 - y / square_size;
+	uint board_x = x / square_size;
+	uint board_y = y / square_size;
+	if (!board_flipped)
+		board_y = BOARD_SIZE - 1 - board_y;
 
-	return SQUARE(file, rank);
+	return SQUARE(board_x, board_y);
 }
 
+// Start dragging a piece if the mouse is over one.
 gboolean board_mouse_down_callback(GtkWidget *widget, GdkEvent *event,
 		gpointer user_data)
 {
@@ -148,12 +180,7 @@ gboolean board_mouse_down_callback(GtkWidget *widget, GdkEvent *event,
 	return FALSE;
 }
 
-void set_button_sensitivity()
-{
-	gtk_widget_set_sensitive(back_button, current_game->parent != NULL);
-	gtk_widget_set_sensitive(forward_button, has_children(current_game));
-}
-
+// Try to move a piece if we're currently dragging one
 gboolean board_mouse_up_callback(GtkWidget *widget, GdkEvent *event,
 		gpointer user_data)
 {
@@ -166,18 +193,16 @@ gboolean board_mouse_up_callback(GtkWidget *widget, GdkEvent *event,
 	Square drag_target = board_coords_to_square(widget, e->x, e->y);
 	Move m = MOVE(drag_source, drag_target);
 	if (legal_move(current_game->board, m, true)) {
-		char notation[MAX_NOTATION_LENGTH];
-		move_notation(current_game->board, m, notation);
+		char notation[MAX_ALGEBRAIC_NOTATION_LENGTH];
+		algebraic_notation_for(current_game->board, m, notation);
 
+		// TODO: Stop printing this when we have a proper move list GUI
 		if (current_game->board->turn == WHITE)
 			printf("%d. %s\n", current_game->board->move_number, notation);
 		else
 			printf(" ..%s\n", notation);
 
-		Board *copy = malloc(sizeof *copy);
-		copy_board(copy, current_game->board);
-		perform_move(copy, m);
-		current_game = add_child(current_game, m, copy);
+		current_game = add_child(current_game, m);
 
 		set_button_sensitivity();
 	}
@@ -188,6 +213,7 @@ gboolean board_mouse_up_callback(GtkWidget *widget, GdkEvent *event,
 	return FALSE;
 }
 
+// Redraw if we're dragging a piece
 gboolean board_mouse_move_callback(GtkWidget *widget, GdkEvent *event,
 		gpointer user_data)
 {
@@ -203,6 +229,7 @@ gboolean board_mouse_move_callback(GtkWidget *widget, GdkEvent *event,
 	return FALSE;
 }
 
+// Back up one move
 gboolean back_button_click_callback(GtkWidget *widget, gpointer user_data)
 {
 	IGNORE(widget);
@@ -217,6 +244,7 @@ gboolean back_button_click_callback(GtkWidget *widget, gpointer user_data)
 	return FALSE;
 }
 
+// Go forward one move
 gboolean forward_button_click_callback(GtkWidget *widget, gpointer user_data)
 {
 	IGNORE(widget);
@@ -231,6 +259,45 @@ gboolean forward_button_click_callback(GtkWidget *widget, gpointer user_data)
 	return FALSE;
 }
 
+// Go to the start of the game
+gboolean first_button_click_callback(GtkWidget *widget, gpointer user_data)
+{
+	IGNORE(widget);
+	IGNORE(user_data);
+
+	current_game = root_node(current_game);
+	set_button_sensitivity();
+	gtk_widget_queue_draw(board_display);
+
+	return FALSE;
+}
+
+// Go to the end of the game
+gboolean last_button_click_callback(GtkWidget *widget, gpointer user_data)
+{
+	IGNORE(widget);
+	IGNORE(user_data);
+
+	current_game = last_node(current_game);
+	set_button_sensitivity();
+	gtk_widget_queue_draw(board_display);
+
+	return FALSE;
+}
+
+// Flip the board
+gboolean flip_button_click_callback(GtkWidget *widget, gpointer user_data)
+{
+	IGNORE(widget);
+	IGNORE(user_data);
+
+	board_flipped = !board_flipped;
+	gtk_widget_queue_draw(board_display);
+
+	return FALSE;
+}
+
+// Load a new game from a PGN file
 void open_pgn_callback(GtkMenuItem *menu_item, gpointer user_data)
 {
 	IGNORE(menu_item);
@@ -277,28 +344,4 @@ void open_pgn_callback(GtkMenuItem *menu_item, gpointer user_data)
 	}
 
 	gtk_widget_destroy(dialog);
-}
-
-gboolean first_button_click_callback(GtkWidget *widget, gpointer user_data)
-{
-	IGNORE(widget);
-	IGNORE(user_data);
-
-	current_game = root_node(current_game);
-	set_button_sensitivity();
-	gtk_widget_queue_draw(board_display);
-
-	return FALSE;
-}
-
-gboolean last_button_click_callback(GtkWidget *widget, gpointer user_data)
-{
-	IGNORE(widget);
-	IGNORE(user_data);
-
-	current_game = last_node(current_game);
-	set_button_sensitivity();
-	gtk_widget_queue_draw(board_display);
-
-	return FALSE;
 }

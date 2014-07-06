@@ -16,9 +16,9 @@ void copy_board(Board *dst, Board *src)
 	dst->half_move_clock = src->half_move_clock;
 	dst->move_number = src->move_number;
 
-	for (uint file = 0; file < BOARD_SIZE; file++)
-		for (uint rank = 0; rank < BOARD_SIZE; rank++)
-			PIECE_AT(dst, file, rank) = PIECE_AT(src, file, rank);
+	for (uint x = 0; x < BOARD_SIZE; x++)
+		for (uint y = 0; y < BOARD_SIZE; y++)
+			PIECE_AT(dst, x, y) = PIECE_AT(src, x, y);
 }
 
 // Converts a character into a piece, using the standard used in PGN and FEN.
@@ -61,24 +61,24 @@ bool from_fen(Board *board, const char *fen_str)
 {
 	uint i = 0;
 
-	for (int rank = 7; rank >= 0; rank--) {
+	for (int y = BOARD_SIZE - 1; y >= 0; y--) {
 		char c;
-		uint file = 0;
+		uint x = 0;
 		while ((c = fen_str[i++]) != '/' && c != ' ') {
 			if (isdigit(c)) {
 				if (c == '0') // "Skip zero files" makes no sense
 					return false;
 
 				for (int n = 0; n < c - '0'; n++)
-					PIECE_AT(board, file + n, rank) = EMPTY;
+					PIECE_AT(board, x + n, y) = EMPTY;
 
-				file += c - '0';
+				x += c - '0';
 				continue;
 			} else {
-				PIECE_AT(board, file, rank) = piece_from_char(c);
+				PIECE_AT(board, x, y) = piece_from_char(c);
 			}
 
-			file++;
+			x++;
 		}
 	}
 
@@ -114,11 +114,10 @@ bool from_fen(Board *board, const char *fen_str)
 	if (file_char == '-') {
 		board->en_passant = NULL_SQUARE;
 	} else {
-		char rank_char = fen_str[i++];
-		if (rank_char < 'a' || rank_char > 'g')
+		if (file_char < 'a' || file_char > 'g')
 			return false;
 
-		rank_char = fen_str[i++];
+		char rank_char = fen_str[i++];
 		if (!isdigit(rank_char))
 			return false;
 
@@ -150,10 +149,10 @@ bool from_fen(Board *board, const char *fen_str)
 void print_board(Board *b)
 {
 	puts("..........");
-	for (int rank = 7; rank >= 0; rank--) {
+	for (int y = BOARD_SIZE - 1; y >= 0; y--) {
 		putchar('.');
-		for (uint file = 0; file < BOARD_SIZE; file++) {
-			Piece p = PIECE_AT(b, file, rank);
+		for (uint x = 0; x < BOARD_SIZE; x++) {
+			Piece p = PIECE_AT(b, x, y);
 			char c = char_from_piece(p);
 			putchar(PLAYER(p) == BLACK ? tolower(c) : c);
 		}
@@ -164,7 +163,7 @@ void print_board(Board *b)
 	printf("%s to move\n", b->turn == WHITE ? "White" : "Black");
 }
 
-Square find_piece_looking_at(Board *board, Square square, Player piece_owner)
+static Square find_piece_looking_at(Board *board, Square square, Player piece_owner)
 {
 	// We need to make sure we don't have infinite recursion in legal_move.
 	// This can happen with looking for checks - we need to see if there are
@@ -182,10 +181,10 @@ Square find_piece_looking_at(Board *board, Square square, Player piece_owner)
 
 	Square ret = NULL_SQUARE;
 
-	for (uint rank = 0; rank < BOARD_SIZE; rank++) {
-		for (uint file = 0; file < BOARD_SIZE; file++) {
-			Piece p = PIECE_AT(board, file, rank);
-			Square s = SQUARE(file, rank);
+	for (uint y = 0; y < BOARD_SIZE; y++) {
+		for (uint x = 0; x < BOARD_SIZE; x++) {
+			Piece p = PIECE_AT(board, x, y);
+			Square s = SQUARE(x, y);
 			Move m = MOVE(s, square);
 
 			if (PLAYER(p) == piece_owner &&
@@ -201,7 +200,7 @@ cleanup:
 	return ret;
 }
 
-Square find_attacking_piece(Board *board, Square square, Player attacker)
+static Square find_attacking_piece(Board *board, Square square, Player attacker)
 {
 	// The easiest way to do this without duplicating logic from legal_move
 	// is to put an enemy piece there and then check if moving there is legal.
@@ -217,19 +216,19 @@ Square find_attacking_piece(Board *board, Square square, Player attacker)
 	return s;
 }
 
-bool under_attack(Board *board, Square square, Player attacker)
+static bool under_attack(Board *board, Square square, Player attacker)
 {
 	return find_attacking_piece(board, square, attacker) != NULL_SQUARE;
 }
 
-Square find_king(Board *board, Player p)
+static Square find_king(Board *board, Player p)
 {
 	Piece king = PIECE(p, KING);
 
-	for (uint rank = 0; rank < BOARD_SIZE; rank++)
-		for (uint file = 0; file < BOARD_SIZE; file++)
-			if (PIECE_AT(board, file, rank) == king)
-				return SQUARE(file, rank);
+	for (uint y = 0; y < BOARD_SIZE; y++)
+		for (uint x = 0; x < BOARD_SIZE; x++)
+			if (PIECE_AT(board, x, y) == king)
+				return SQUARE(x, y);
 
 	return NULL_SQUARE;
 }
@@ -241,6 +240,9 @@ bool in_check(Board *board, Player p)
 	return under_attack(board, king_location, OTHER_PLAYER(p));
 }
 
+// This could be more simply written as "number of legal moves = 0", if the
+// enumeration of all legal moves is implemented at some point.
+// As it is we don't have that, so this is simpler.
 bool checkmate(Board *board, Player p)
 {
 	// We must be in check
@@ -249,22 +251,22 @@ bool checkmate(Board *board, Player p)
 
 	Square king_location = find_king(board, p);
 	Player other = OTHER_PLAYER(p);
-	int file = SQUARE_FILE(king_location);
-	int rank = SQUARE_RANK(king_location);
+	int x = SQUARE_X(king_location);
+	int y = SQUARE_Y(king_location);
 
 	// Can the king move out of check?
 	for (int dx = -1; dx < 2; dx++) {
 		for (int dy = -1; dy < 2; dy++) {
-			if (file + dx < 0 || file + dx >= BOARD_SIZE ||
-					rank + dy < 0 || rank + dy >= BOARD_SIZE)
+			if (x + dx < 0 || x + dx >= BOARD_SIZE ||
+					y + dy < 0 || y + dy >= BOARD_SIZE)
 				continue;
-			Move m = MOVE(king_location, SQUARE(file + dx, rank + dy));
+			Move m = MOVE(king_location, SQUARE(x + dx, y + dy));
 			if (legal_move(board, m, true))
 				return false;
 		}
 	}
 
-	// Can the attacking piece be taken?
+	// Can the attacking piece be captured?
 	Square attacker = find_attacking_piece(board, king_location, other);
 	if (under_attack(board, attacker, p))
 		return false;
@@ -272,8 +274,8 @@ bool checkmate(Board *board, Player p)
 	// Can we block?
 	Piece_type type = PIECE_TYPE(PIECE_AT_SQUARE(board, attacker));
 	if (type != KNIGHT) {
-		int dx = SQUARE_FILE(attacker) - file;
-		int dy = SQUARE_RANK(attacker) - rank;
+		int dx = SQUARE_X(attacker) - x;
+		int dy = SQUARE_Y(attacker) - y;
 
 		int ax = abs(dx);
 		int ay = abs(dy);
@@ -281,17 +283,17 @@ bool checkmate(Board *board, Player p)
 		int x_direction = ax == 0 ? 0 : dx / ax;
 		int y_direction = ay == 0 ? 0 : dy / ay;
 
-		uint file = SQUARE_FILE(king_location) + x_direction;
-		uint rank = SQUARE_RANK(king_location) + y_direction;
-		while (!(file == SQUARE_FILE(attacker) &&
-					rank == SQUARE_RANK(attacker))) {
-			Square blocker = find_piece_looking_at(board, SQUARE(file, rank), p);
+		uint x = SQUARE_X(king_location) + x_direction;
+		uint y = SQUARE_Y(king_location) + y_direction;
+		while (!(x == SQUARE_X(attacker) &&
+					y == SQUARE_Y(attacker))) {
+			Square blocker = find_piece_looking_at(board, SQUARE(x, y), p);
 			if (blocker != NULL_SQUARE &&
 					PIECE_TYPE(PIECE_AT_SQUARE(board, blocker)) != KING)
 				return false;
 
-			file += x_direction;
-			rank += y_direction;
+			x += x_direction;
+			y += y_direction;
 		}
 	}
 
@@ -301,26 +303,26 @@ bool checkmate(Board *board, Player p)
 
 bool can_castle_kingside(Board *board, Player p)
 {
-	uint rank = p == WHITE ? 0 : 7;
+	uint y = p == WHITE ? 0 : BOARD_SIZE - 1;
 	Player other = OTHER_PLAYER(p);
 
 	return board->castling[p].kingside && !in_check(board, p) &&
-		PIECE_AT(board, 5, rank) == EMPTY &&
-		PIECE_AT(board, 6, rank) == EMPTY &&
-		!under_attack(board, SQUARE(5, rank), other) &&
-		!under_attack(board, SQUARE(6, rank), other);
+		PIECE_AT(board, 5, y) == EMPTY &&
+		PIECE_AT(board, 6, y) == EMPTY &&
+		!under_attack(board, SQUARE(5, y), other) &&
+		!under_attack(board, SQUARE(6, y), other);
 }
 
 bool can_castle_queenside(Board *board, Player p)
 {
-	uint rank = p == WHITE ? 0 : 7;
+	uint y = p == WHITE ? 0 : BOARD_SIZE - 1;
 	Player other = OTHER_PLAYER(p);
 
 	return board->castling[p].kingside && !in_check(board, p) &&
-		PIECE_AT(board, 3, rank) == EMPTY &&
-		PIECE_AT(board, 2, rank) == EMPTY &&
-		PIECE_AT(board, 1, rank) == EMPTY &&
-		!under_attack(board, SQUARE(3, rank), other) &&
-		!under_attack(board, SQUARE(2, rank), other) &&
-		!under_attack(board, SQUARE(1, rank), other);
+		PIECE_AT(board, 3, y) == EMPTY &&
+		PIECE_AT(board, 2, y) == EMPTY &&
+		PIECE_AT(board, 1, y) == EMPTY &&
+		!under_attack(board, SQUARE(3, y), other) &&
+		!under_attack(board, SQUARE(2, y), other) &&
+		!under_attack(board, SQUARE(1, y), other);
 }

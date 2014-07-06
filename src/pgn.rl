@@ -55,7 +55,7 @@ void print_token(Token *t)
 	}
 }
 
-bool symbol_is_integer(Token *t)
+static bool symbol_is_integer(Token *t)
 {
 	char *str = t->value.string;
 	for (size_t i = 0; str[i] != '\0'; i++)
@@ -66,7 +66,7 @@ bool symbol_is_integer(Token *t)
 }
 		
 
-char *escape_string(char *str, size_t length)
+static char *read_escaped_string(char *str, size_t length)
 {
 	char *out = malloc(length + 1);
 	size_t j = 0;
@@ -107,7 +107,7 @@ char *escape_string(char *str, size_t length)
 static GArray *tokenize_pgn(char *buf, gsize length)
 {
 	// The initial size (140) is just a rough estimate of the average number of
-	// tokens, based on 4 tokens for each of the 7 required tags, and 4 tokens
+	// tokens, based on 4 tokens for each of the 7 required tags, plus 4 tokens
 	// for each of 30 moves.
 	GArray *tokens = g_array_sized_new(FALSE, FALSE, sizeof(Token), 140);
 
@@ -125,7 +125,7 @@ static GArray *tokenize_pgn(char *buf, gsize length)
 		action add_string {
 			// - 2 for quotes
 			size_t length = te - ts - 2;
-			char *token = escape_string(ts + 1, length);
+			char *token = read_escaped_string(ts + 1, length);
 
 			Token t = { STRING, { token } };
 
@@ -209,21 +209,23 @@ static GArray *tokenize_pgn(char *buf, gsize length)
 // as something like Bd5 could start from any square on that diagonal.
 static Move parse_move(Board *board, char *notation)
 {
-	if (strcmp(notation, "O-O") == 0) {
-		uint rank = board->turn == WHITE ? 0 : 7;
-		return MOVE(SQUARE(4, rank), SQUARE(6, rank));
-	}
-	if (strcmp(notation, "O-O-O") == 0) {
-		uint rank = board->turn == WHITE ? 0 : 7;
-		return MOVE(SQUARE(4, rank), SQUARE(2, rank));
-	}
-
+	// First we remove 'x's, '+'s, and '#'s, as we don't need them and they only
+	// complicate parsing.
 	char stripped[5]; // max length without 'x#+'s, + 1 for null terminator
 	size_t j = 0;
 	for (size_t i = 0; notation[i] != '\0'; i++)
 		if (notation[i] != 'x' && notation[i] != '#' && notation[i] != '+')
 			stripped[j++] = notation[i];
 	stripped[j] = '\0';
+
+	if (strcmp(notation, "O-O") == 0) {
+		uint y = board->turn == WHITE ? 0 : 7;
+		return MOVE(SQUARE(4, y), SQUARE(6, y));
+	}
+	if (strcmp(notation, "O-O-O") == 0) {
+		uint y = board->turn == WHITE ? 0 : 7;
+		return MOVE(SQUARE(4, y), SQUARE(2, y));
+	}
 
 	size_t i = 0;
 	Piece_type type;
@@ -435,11 +437,7 @@ static bool parse_tokens(PGN *pgn, GArray *tokens, GError **err)
 			return false;
 		}
 
-		Board *new_board = malloc(sizeof *new_board);
-		copy_board(new_board, game->board);
-		perform_move(new_board, m);
-		add_child(game, m, new_board);
-		game = first_child(game);
+		game = add_child(game, m);
 
 		half_move_number++;
 	}
@@ -447,7 +445,7 @@ static bool parse_tokens(PGN *pgn, GArray *tokens, GError **err)
 	return true;
 }
 
-void free_tokens(GArray *tokens)
+static void free_tokens(GArray *tokens)
 {
 	for (size_t i = 0; i < tokens->len; i++) {
 		Token *t = &g_array_index(tokens, Token, i);
@@ -467,6 +465,11 @@ bool read_pgn(PGN *pgn, const char *input_filename, GError **error)
 	char *buf;
 	gsize length;
 
+	// We just load the whole file into memory.
+	// PGN files are typically very short: even the longest game in tournament
+	// history is only about 3.5KB.
+	// If someone tries to load a 2GB PGN and complains about it crashing, they
+	// need to take a long, hard look at themself.
 	GFile *file = g_file_new_for_path(input_filename);
 	if (!g_file_load_contents(file, NULL, &buf, &length, NULL, error)) {
 		ret = false;
@@ -484,12 +487,12 @@ cleanup:
 	return ret;
 }
 
-const char *seven_tag_roster[] =
+static const char *seven_tag_roster[] =
 {
 	"Event", "Site", "Date", "Round", "White", "Black", "Result"
 };
 
-bool in_seven_tag_roster(char *tag_name)
+static bool in_seven_tag_roster(char *tag_name)
 {
 	size_t size = sizeof(seven_tag_roster) / sizeof(seven_tag_roster[0]);
 	for (size_t i = 0; i < size; i++)
@@ -564,8 +567,8 @@ bool write_pgn(PGN *pgn, FILE *file)
 				"%d." :
 				" %d.", game->board->move_number);
 
-		char move_str[MAX_NOTATION_LENGTH];
-		move_notation(game->parent->board, game->move, move_str);
+		char move_str[MAX_ALGEBRAIC_NOTATION_LENGTH];
+		algebraic_notation_for(game->parent->board, game->move, move_str);
 		fprintf(file, " %s", move_str);
 		
 		game = first_child(game);

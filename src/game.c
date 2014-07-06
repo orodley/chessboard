@@ -17,8 +17,12 @@ Game *new_game()
 	return game;
 }
 
-Game *add_child(Game *game, Move move, Board *board)
+Game *add_child(Game *game, Move move)
 {
+	Board *board = malloc(sizeof *board);
+	copy_board(board, game->board);
+	perform_move(board, move);
+
 	Game *children = game->children;
 
 	while (children != NULL && children->sibling != NULL &&
@@ -26,6 +30,7 @@ Game *add_child(Game *game, Move move, Board *board)
 		children = children->sibling;
 
 	if (children != NULL && children->move == move) {
+		free(board);
 		return children;
 	} else {
 		Game *new_node = new_game();
@@ -70,9 +75,10 @@ bool has_children(Game *game)
 
 void free_game(Game *game)
 {
-	Game *children = game->children;
-	while (children != NULL && children->sibling != NULL)
-		free_game(children);
-
 	free(game->board);
+
+	if (game->sibling != NULL)
+		free_game(game->sibling);
+	if (game->children != NULL)
+		free_game(game->sibling);
 }

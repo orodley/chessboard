@@ -76,10 +76,16 @@ int main(int argc, char *argv[])
 	gtk_toolbar_set_show_arrow(GTK_TOOLBAR(tool_bar), false);
 	gtk_widget_set_halign(tool_bar, GTK_ALIGN_CENTER);
 
+	GtkToolItem *flip_button_item = gtk_tool_button_new(NULL, NULL);
+	gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(flip_button_item), "view-refresh");
+	g_signal_connect(G_OBJECT(flip_button_item), "clicked",
+			G_CALLBACK(flip_button_click_callback), NULL);
+	gtk_toolbar_insert(GTK_TOOLBAR(tool_bar), flip_button_item, 0);
+
+	gtk_toolbar_insert(GTK_TOOLBAR(tool_bar), gtk_separator_tool_item_new(), 0);
+
 	GtkToolItem *last_button_item = gtk_tool_button_new(NULL, NULL);
 	gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(last_button_item), "go-last");
-	g_signal_connect(G_OBJECT(last_button_item), "clicked",
-			G_CALLBACK(last_button_click_callback), NULL);
 	gtk_toolbar_insert(GTK_TOOLBAR(tool_bar), last_button_item, 0);
 
 	GtkToolItem *forward_button_item = gtk_tool_button_new(NULL, NULL);

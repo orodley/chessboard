@@ -21,7 +21,7 @@ typedef struct Game
 } Game;
 
 Game *new_game();
-Game *add_child(Game *game, Move move, Board *board);
+Game *add_child(Game *game, Move move);
 Game *first_child(Game *game);
 Game *root_node(Game *game);
 Game *last_node(Game *game);
