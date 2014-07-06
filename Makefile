@@ -1,9 +1,11 @@
-NAME := chessboard
+PROG_NAME := chessboard
 
 CC ?= gcc
-CFLAGS := -Wall -Wextra -Werror -std=c99 -pedantic -DPROG_NAME=\"$(NAME)\" \
-		 -Isrc/
-CFLAGS += $(shell pkg-config --cflags --libs gtk+-3.0 librsvg-2.0)
+CFLAGS := -Wall -Wextra -Werror -std=c99 -pedantic \
+          -DPROG_NAME=\"$(PROG_NAME)\" -Isrc/
+CFLAGS += $(shell pkg-config --cflags gtk+-3.0 librsvg-2.0)
+
+LINK_FLAGS := $(shell pkg-config --libs gtk+-3.0 librsvg-2.0)
 
 ifdef DEBUG
 	CFLAGS += -g
@@ -16,10 +18,10 @@ GENERATED_FILES := $(patsubst %.rl, %.c, $(wildcard src/*.rl))
 
 .PHONY: all clean test test/pgn
 
-all: $(NAME)
+all: $(PROG_NAME)
 
-$(NAME): $(OBJS) main.o
-	$(CC) $^ $(CFLAGS) -o $@
+$(PROG_NAME): $(OBJS) main.o
+	$(CC) $^ $(CFLAGS) $(LINK_FLAGS) -o $@
 	[ -z "$$DEBUG" ] || ctags -R
 
 %.c: %.rl
