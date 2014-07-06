@@ -1,6 +1,5 @@
 #include <gtk/gtk.h>
 #include <librsvg/rsvg.h>
-#include <librsvg/rsvg-cairo.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
