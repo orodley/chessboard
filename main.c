@@ -76,30 +76,30 @@ int main(int argc, char *argv[])
 	gtk_toolbar_set_show_arrow(GTK_TOOLBAR(tool_bar), false);
 	gtk_widget_set_halign(tool_bar, GTK_ALIGN_CENTER);
 
-	GtkToolItem *last_button_item =
-		gtk_tool_button_new_from_stock(GTK_STOCK_GOTO_LAST);
+	GtkToolItem *last_button_item = gtk_tool_button_new(NULL, NULL);
+	gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(last_button_item), "go-last");
 	g_signal_connect(G_OBJECT(last_button_item), "clicked",
 			G_CALLBACK(last_button_click_callback), NULL);
 	gtk_toolbar_insert(GTK_TOOLBAR(tool_bar), last_button_item, 0);
 
-	GtkToolItem *forward_button_item =
-		gtk_tool_button_new_from_stock(GTK_STOCK_GO_FORWARD);
+	GtkToolItem *forward_button_item = gtk_tool_button_new(NULL, NULL);
+	gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(forward_button_item), "go-next");
 	forward_button = GTK_WIDGET(forward_button_item);
 	g_signal_connect(G_OBJECT(forward_button_item), "clicked",
 			G_CALLBACK(forward_button_click_callback), NULL);
 	gtk_widget_set_sensitive(forward_button, FALSE);
 	gtk_toolbar_insert(GTK_TOOLBAR(tool_bar), forward_button_item, 0);
 
-	GtkToolItem *back_button_item =
-		gtk_tool_button_new_from_stock(GTK_STOCK_GO_BACK);
+	GtkToolItem *back_button_item = gtk_tool_button_new(NULL, NULL);
+	gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(back_button_item), "go-previous");
 	back_button = GTK_WIDGET(back_button_item);
 	g_signal_connect(G_OBJECT(back_button_item), "clicked",
 			G_CALLBACK(back_button_click_callback), NULL);
 	gtk_widget_set_sensitive(back_button, FALSE);
 	gtk_toolbar_insert(GTK_TOOLBAR(tool_bar), back_button_item, 0);
 
-	GtkToolItem *first_button_item =
-		gtk_tool_button_new_from_stock(GTK_STOCK_GOTO_FIRST);
+	GtkToolItem *first_button_item = gtk_tool_button_new(NULL, NULL);
+	gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(first_button_item), "go-first");
 	g_signal_connect(G_OBJECT(first_button_item), "clicked",
 			G_CALLBACK(first_button_click_callback), NULL);
 	gtk_toolbar_insert(GTK_TOOLBAR(tool_bar), first_button_item, 0);
