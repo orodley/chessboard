@@ -49,7 +49,6 @@ Game *current_game;
 GtkWidget *board_display;
 GtkWidget *back_button;
 GtkWidget *forward_button;
-// TODO: this should flip on the x-axis too
 bool board_flipped = false;
 
 static Square drag_source = NULL_SQUARE;
@@ -99,7 +98,9 @@ gboolean board_draw_callback(GtkWidget *widget, cairo_t *cr, gpointer data)
 
 	// Color light squares one-by-one
 	cairo_set_line_width(cr, 0);
-	for (uint x = 0; x < BOARD_SIZE; x++) {
+	for (uint file = 0; file < BOARD_SIZE; file++) {
+		uint x = board_flipped ? BOARD_SIZE - file - 1 : file;
+
 		for (int rank = BOARD_SIZE - 1; rank >= 0; rank--) {
 			int y = board_flipped ? BOARD_SIZE - rank - 1 : rank;
 			if ((y + x) % 2 == 0) {
@@ -157,8 +158,11 @@ static Square board_coords_to_square(GtkWidget *drawing_area, uint x, uint y)
 	uint square_size = get_square_size(drawing_area);
 	uint board_x = x / square_size;
 	uint board_y = y / square_size;
-	if (!board_flipped)
+	if (!board_flipped) {
 		board_y = BOARD_SIZE - 1 - board_y;
+	} else {
+		board_x = BOARD_SIZE - 1 - board_x;
+	}
 
 	return SQUARE(board_x, board_y);
 }
