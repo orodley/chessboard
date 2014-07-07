@@ -146,7 +146,8 @@ gboolean board_draw_callback(GtkWidget *widget, cairo_t *cr, gpointer data)
 
 	if (drag_source != NULL_SQUARE) {
 		cairo_identity_matrix(cr);
-		cairo_translate(cr, mouse_x - square_size / 2, mouse_y - square_size / 2);
+		cairo_translate(cr, padding + mouse_x - square_size / 2,
+				padding + mouse_y - square_size / 2);
 		draw_piece(cr, PIECE_AT_SQUARE(current_game->board, drag_source), square_size);
 	}
 
@@ -225,8 +226,15 @@ gboolean board_mouse_move_callback(GtkWidget *widget, GdkEvent *event,
 	IGNORE(user_data);
 	GdkEventButton *e = (GdkEventButton *)event;
 
-	mouse_x = e->x;
-	mouse_y = e->y;
+	// e->x and e->y are relative to the window, but we want coordinates
+	// relative to the chessboard drawing area.
+	// So we figure out where it is, and add that on.
+	gint wx, wy;
+	gtk_widget_translate_coordinates(widget, gtk_widget_get_toplevel(widget),
+			0, 0, &wx, &wy);
+
+	mouse_x = e->x + wx;
+	mouse_y = e->y + wy;
 
 	if (drag_source != NULL_SQUARE)
 		gtk_widget_queue_draw(widget);
