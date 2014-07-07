@@ -1,5 +1,8 @@
 #include <gtk/gtk.h>
 #include <librsvg/rsvg.h>
+#ifndef RSVG_CAIRO_H
+#include <librsvg/rsvg-cairo.h>
+#endif
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
