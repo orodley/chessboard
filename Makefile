@@ -38,4 +38,4 @@ test/pgn: test/pgn/run-tests.sh test/pgn/test-pgn
 	@test/pgn/run-tests.sh
 
 test/pgn/test-pgn: test/pgn/test-pgn.c $(OBJS)
-	$(CC) $^ $(CFLAGS) -o $@
+	$(CC) $^ $(CFLAGS) $(LINK_FLAGS) -o $@

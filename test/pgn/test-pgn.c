@@ -5,7 +5,9 @@
 
 int main(int argc, char *argv[])
 {
+#if GLIB_MAJOR_VERION <= 2 && GLIB_MINOR_VERSION <= 34
 	g_type_init();
+#endif
 
 	if (argc < 2) {
 		fprintf(stderr, "Usage: %s <pgn file>\n", argv[0]);
