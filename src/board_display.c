@@ -74,8 +74,6 @@ static void draw_piece(cairo_t *cr, Piece p, uint size)
 	double scale = 0.025 * size / DEFAULT_SQUARE_SIZE;
 	cairo_scale(cr, scale, scale);
 
-	cairo_set_source_rgb(cr, 0, 0, 0);
-
 	rsvg_handle_render_cairo(piece_image, cr);
 
 	cairo_scale(cr, 1 / scale, 1 / scale);
