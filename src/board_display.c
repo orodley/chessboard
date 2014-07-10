@@ -17,13 +17,16 @@ RsvgHandle *piece_images[2][6];
 
 void load_svgs(char *dir, GError **err)
 {
-	uint len = strlen(dir) + 6; // piece letter + ".svg\0"
+	uint len = strlen(dir) + 8; // e.g.: "w_k.svg\0"
 	char str[len];
-	char *piece_letters[] = { "pnbrqk", "PNBRQK" };
+	char piece_letters[] = "pnbrqk";
+	char side_letters[] = "bw";
 
 	for (uint i = 0; i < 2; i++) {
-		for (uint j = 0; piece_letters[i][j] != '\0'; j++) {
-			sprintf(str, "%s%c.svg", dir, piece_letters[i][j]);
+		char side = side_letters[i];
+
+		for (uint j = 0; piece_letters[j] != '\0'; j++) {
+			sprintf(str, "%s%c_%c.svg", dir, side, piece_letters[j]);
 
 			piece_images[i][j] = rsvg_handle_new_from_file(str, err);
 			if (*err != NULL)
