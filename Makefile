@@ -28,7 +28,7 @@ $(PROG_NAME): $(OBJS) main.o
 	ragel -C $<
 
 clean:
-	rm -f $(NAME) src/*.o
+	rm -f $(PROG_NAME) src/*.o
 	rm -f $(GENERATED_FILES)
 	rm -f tags
 
