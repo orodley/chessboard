@@ -2,10 +2,10 @@
 #include <gtk/gtk.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "board.h"
+#include "chess/board.h"
+#include "chess/game.h"
+#include "chess/pgn.h"
 #include "board_display.h"
-#include "game.h"
-#include "pgn.h"
 
 char *piece_svgs = "pieces/merida/";
 

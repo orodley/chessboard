@@ -7,11 +7,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "board.h"
+#include "chess/board.h"
+#include "chess/moves.h"
+#include "chess/pgn.h"
 #include "board_display.h"
 #include "misc.h"
-#include "moves.h"
-#include "pgn.h"
 
 RsvgHandle *piece_images[2][6];
 

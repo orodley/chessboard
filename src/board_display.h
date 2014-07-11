@@ -3,9 +3,9 @@
 
 #include <stdbool.h>
 #include <gtk/gtk.h>
-#include "board.h"
-#include "game.h"
-#include "moves.h"
+#include "chess/board.h"
+#include "chess/game.h"
+#include "chess/moves.h"
 
 #define DEFAULT_SQUARE_SIZE 50
 

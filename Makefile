@@ -14,10 +14,10 @@ endif
 
 LINK_FLAGS := $(shell pkg-config --libs gtk+-3.0 librsvg-2.0)
 
-OBJS := $(patsubst %.c,  %.o, $(wildcard src/*.c))
-OBJS += $(patsubst %.rl, %.o, $(wildcard src/*.rl))
+OBJS := $(patsubst %.c,  %.o, $(shell find src -name '*.c'))
+OBJS += $(patsubst %.rl, %.o, $(shell find src -name '*.rl'))
 
-GENERATED_FILES := $(patsubst %.rl, %.c, $(wildcard src/*.rl))
+GENERATED_FILES := $(patsubst %.rl, %.c, $(shell find src -name '*.rl'))
 
 .PHONY: all clean test test/pgn
 
@@ -31,7 +31,7 @@ $(PROG_NAME): $(OBJS) main.o
 	ragel -C $<
 
 clean:
-	rm -f $(PROG_NAME) src/*.o
+	rm -f $(PROG_NAME) $(shell find . -name '*.o')
 	rm -f $(GENERATED_FILES)
 	rm -f tags
 
