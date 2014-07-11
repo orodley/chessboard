@@ -21,18 +21,17 @@ gboolean board_mouse_up_callback(GtkWidget *widget, GdkEvent *event,
 gboolean board_mouse_move_callback(GtkWidget *widget, GdkEvent *event,
 		gpointer user_data);
 
-gboolean back_button_click_callback(GtkWidget *widget, gpointer user_data);
-gboolean forward_button_click_callback(GtkWidget *widget, gpointer user_data);
-gboolean first_button_click_callback(GtkWidget *widget, gpointer user_data);
-gboolean last_button_click_callback(GtkWidget *widget, gpointer user_data);
+gboolean go_back_button_click_callback(GtkWidget *widget, gpointer user_data);
+gboolean go_next_button_click_callback(GtkWidget *widget, gpointer user_data);
+gboolean go_start_button_click_callback(GtkWidget *widget, gpointer user_data);
+gboolean go_end_button_click_callback(GtkWidget *widget, gpointer user_data);
 gboolean flip_button_click_callback(GtkWidget *widget, gpointer user_data);
 
 void open_pgn_callback(GtkMenuItem *menu_item, gpointer user_data);
 
-extern Board *current_board;
 extern Game *current_game;
 extern GtkWidget *board_display;
-extern GtkWidget *back_button;
-extern GtkWidget *forward_button;
+extern GtkWidget *go_back_button;
+extern GtkWidget *go_next_button;
 
 #endif // include guard

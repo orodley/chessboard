@@ -50,8 +50,8 @@ static uint get_square_size(GtkWidget *board)
 
 Game *current_game;
 GtkWidget *board_display;
-GtkWidget *back_button;
-GtkWidget *forward_button;
+GtkWidget *go_back_button;
+GtkWidget *go_next_button;
 bool board_flipped = false;
 
 static Square drag_source = NULL_SQUARE;
@@ -60,8 +60,8 @@ static uint mouse_y;
 
 void set_button_sensitivity()
 {
-	gtk_widget_set_sensitive(back_button, current_game->parent != NULL);
-	gtk_widget_set_sensitive(forward_button, has_children(current_game));
+	gtk_widget_set_sensitive(go_back_button, current_game->parent != NULL);
+	gtk_widget_set_sensitive(go_next_button, has_children(current_game));
 }
 
 static void draw_piece(cairo_t *cr, Piece p, uint size)
@@ -246,7 +246,7 @@ gboolean board_mouse_move_callback(GtkWidget *widget, GdkEvent *event,
 }
 
 // Back up one move
-gboolean back_button_click_callback(GtkWidget *widget, gpointer user_data)
+gboolean go_back_button_click_callback(GtkWidget *widget, gpointer user_data)
 {
 	IGNORE(widget);
 	IGNORE(user_data);
@@ -261,7 +261,7 @@ gboolean back_button_click_callback(GtkWidget *widget, gpointer user_data)
 }
 
 // Go forward one move
-gboolean forward_button_click_callback(GtkWidget *widget, gpointer user_data)
+gboolean go_next_button_click_callback(GtkWidget *widget, gpointer user_data)
 {
 	IGNORE(widget);
 	IGNORE(user_data);
@@ -276,7 +276,7 @@ gboolean forward_button_click_callback(GtkWidget *widget, gpointer user_data)
 }
 
 // Go to the start of the game
-gboolean first_button_click_callback(GtkWidget *widget, gpointer user_data)
+gboolean go_start_button_click_callback(GtkWidget *widget, gpointer user_data)
 {
 	IGNORE(widget);
 	IGNORE(user_data);
@@ -289,7 +289,7 @@ gboolean first_button_click_callback(GtkWidget *widget, gpointer user_data)
 }
 
 // Go to the end of the game
-gboolean last_button_click_callback(GtkWidget *widget, gpointer user_data)
+gboolean go_end_button_click_callback(GtkWidget *widget, gpointer user_data)
 {
 	IGNORE(widget);
 	IGNORE(user_data);
