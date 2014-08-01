@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <gtk/gtk.h>
-#include "pgn.h"
+#include "chess/pgn.h"
 
 int main(int argc, char *argv[])
 {
