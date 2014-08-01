@@ -54,6 +54,17 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
+// Support older version of GTK in Travis
+#if GTK_MAJOR_VERSION <= 3 && GTK_MINOR_VERSION < 10
+GtkBuilder *gtk_builder_new_from_file(const gchar *filename)
+{
+	GtkBuilder *builder = gtk_builder_new();
+	gtk_builder_add_from_file(builder, filename, NULL);
+
+	return builder;
+}
+#endif
+
 void set_up_gui()
 {
 	GtkBuilder *builder = gtk_builder_new_from_file("chessboard.ui");
