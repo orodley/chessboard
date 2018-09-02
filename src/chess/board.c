@@ -318,7 +318,7 @@ bool can_castle_queenside(Board *board, Player p)
 	uint y = p == WHITE ? 0 : BOARD_SIZE - 1;
 	Player other = OTHER_PLAYER(p);
 
-	return board->castling[p].kingside && !in_check(board, p) &&
+	return board->castling[p].queenside && !in_check(board, p) &&
 		PIECE_AT(board, 3, y) == EMPTY &&
 		PIECE_AT(board, 2, y) == EMPTY &&
 		PIECE_AT(board, 1, y) == EMPTY &&
